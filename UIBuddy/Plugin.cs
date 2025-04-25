@@ -44,6 +44,7 @@ namespace UIBuddy
 
             _pm = new PanelManager();
            _pm.AddDrag("SLS logo");
+           _pm.AddDrag(null);
             //_pm.AddDrag("BottomBar(Clone)");
         }
 

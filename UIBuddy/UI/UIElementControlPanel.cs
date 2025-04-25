@@ -17,6 +17,7 @@ namespace UIBuddy.UI
         // Track the last position to detect changes
         private Vector2 _lastRootPosition;
         private float _stepSize = 0.05f;
+        private bool _useLogarithmicScaling = true;
 
         private RectTransform RootRect { get; set; }
         public Action<float> ScaleChanged { get; set; }
@@ -79,9 +80,9 @@ namespace UIBuddy.UI
             {
                 ScaleSlider = slider;
                 // Configure the slider
-                slider.value = scaleFactor;
-                slider.minValue = 0.2f;
-                slider.maxValue = 2.0f;
+                slider.minValue = 20.0f;
+                slider.maxValue = 100.0f;
+                slider.value = ScaleFactorToSliderValue(scaleFactor);
 
                 // Set up the layout element for the slider
                 var sliderLayoutElement = scaleSlider.AddComponent<LayoutElement>();
@@ -102,6 +103,77 @@ namespace UIBuddy.UI
             // Round the value to the nearest step
             return Mathf.Round(value / _stepSize) * _stepSize;
         }
+
+        // Convert between slider value (0-100) and actual scale factor (0.2-2.0)
+        private float SliderValueToScaleFactor(float sliderValue)
+        {
+            if (_useLogarithmicScaling)
+            {
+                // Use logarithmic mapping for better control at small values
+                // Map 0-100 to 0.2-2.0 using a logarithmic scale
+                float minScale = 0.2f;
+                float maxScale = 2.0f;
+
+                // Normalize sliderValue to 0-1 range
+                float t = sliderValue / 100.0f;
+
+                // Apply logarithmic mapping (base 10)
+                // This creates more steps in the lower range and fewer in the upper range
+                if (t <= 0) return minScale;
+
+                // Map 0-0.5 to 0.2-1.0 (finer control below 1.0)
+                // Map 0.5-1.0 to 1.0-2.0 (coarser control above 1.0)
+                if (t <= 0.5f)
+                {
+                    // Map 0-0.5 to 0.2-1.0
+                    return Mathf.Lerp(minScale, 1.0f, t * 2.0f);
+                }
+                else
+                {
+                    // Map 0.5-1.0 to 1.0-2.0
+                    return Mathf.Lerp(1.0f, maxScale, (t - 0.5f) * 2.0f);
+                }
+            }
+            else
+            {
+                // Simple linear mapping from 0-100 to 0.2-2.0
+                return 0.2f + (sliderValue / 100.0f) * 1.8f;
+            }
+        }
+
+        private float ScaleFactorToSliderValue(float scaleFactor)
+        {
+            if (_useLogarithmicScaling)
+            {
+                // Inverse of the logarithmic mapping
+                float minScale = 0.2f;
+                float maxScale = 2.0f;
+
+                // Clamp to valid scale range
+                scaleFactor = Mathf.Clamp(scaleFactor, minScale, maxScale);
+
+                float t;
+                if (scaleFactor <= 1.0f)
+                {
+                    // Map 0.2-1.0 to 0-0.5
+                    t = (scaleFactor - minScale) / (1.0f - minScale) * 0.5f;
+                }
+                else
+                {
+                    // Map 1.0-2.0 to 0.5-1.0
+                    t = 0.5f + (scaleFactor - 1.0f) / (maxScale - 1.0f) * 0.5f;
+                }
+
+                // Map to slider range
+                return t * 100.0f;
+            }
+            else
+            {
+                // Simple linear mapping from 0.2-2.0 to 0-100
+                return ((scaleFactor - 0.2f) / 1.8f) * 100.0f;
+            }
+        }
+
 
         private void UpdateFloatingPanelPosition()
         {
@@ -143,19 +215,22 @@ namespace UIBuddy.UI
         }
 
         // Separate methods to avoid lambda expressions which might cause issues
-        private void OnScaleValueChanged(float value)
+        private void OnScaleValueChanged(float sliderValue)
         {
-            // Round to the nearest step
-            float steppedValue = RoundToStepSize(value);
+            // Round to the nearest step on the slider scale
+            float steppedSliderValue = RoundToStepSize(sliderValue);
 
-            // Only update if the value has actually changed to avoid infinite loops
-            if (Math.Abs(ScaleSlider.value - steppedValue) > 0.001f)
+            // Only update the slider if the value has changed significantly to avoid infinite loops
+            if (Math.Abs(ScaleSlider.value - steppedSliderValue) > 0.001f)
             {
-                ScaleSlider.value = steppedValue;
+                ScaleSlider.value = steppedSliderValue;
             }
 
-            if (ScaleChanged != null)
-                ScaleChanged(value);
+            // Convert to actual scale factor value
+            float scaleFactor = SliderValueToScaleFactor(steppedSliderValue);
+
+            // Notify listeners of the change with the actual scale factor
+            ScaleChanged?.Invoke(scaleFactor);
         }
 
         private void OnCloseButtonClicked()

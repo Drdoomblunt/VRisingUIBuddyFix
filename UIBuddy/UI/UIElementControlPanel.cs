@@ -12,7 +12,7 @@ namespace UIBuddy.UI
         private RectTransform FloatingControlRect { get; set; }
         
         // Offset for the floating panel relative to the root object
-        private readonly Vector2 _floatingPanelOffset = new Vector2(0, 30);
+        private readonly Vector2 _floatingPanelOffset = new Vector2(0, 10);
         // Track the last position to detect changes
         private Vector2 _lastRootPosition;
 

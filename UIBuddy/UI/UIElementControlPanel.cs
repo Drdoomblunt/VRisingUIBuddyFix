@@ -1,5 +1,4 @@
 ﻿using System;
-using UIBuddy.Classes;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,16 +8,105 @@ namespace UIBuddy.UI
     {
         private GameObject RootObject { get; }
         public GameObject TitleBar { get; private set; }
+        private GameObject FloatingControlPanel { get; set; }
+        private RectTransform FloatingControlRect { get; set; }
+        
+        // Offset for the floating panel relative to the root object
+        private readonly Vector2 _floatingPanelOffset = new Vector2(0, 30);
+        // Track the last position to detect changes
+        private Vector2 _lastRootPosition;
 
+        private RectTransform RootRect { get; set; }
         public Action<float> ScaleChanged { get; set; }
 
         public UIElementControlPanel(GameObject parent, float scaleFactor)
         {
             RootObject = UIFactory.CreateUIObject($"MarkPanel_{Guid.NewGuid()}", parent);
-            ConstructUI(scaleFactor);
+            RootRect = RootObject.GetComponent<RectTransform>();
+            ConstructUI();
+
+            // Initialize the floating control panel
+            CreateFloatingControlPanel(scaleFactor);
+
+            // Set initial position of the floating panel
+            UpdateFloatingPanelPosition();
         }
 
-        private void ConstructUI(float scaleFactor)
+        private void CreateFloatingControlPanel(float scaleFactor)
+        {
+            // Create the floating panel in the same parent as the root object
+            Transform parentTransform = RootObject.transform.parent;
+            if (parentTransform == null)
+                return;
+
+            // Create the floating panel
+            FloatingControlPanel = UIFactory.CreateUIObject("FloatingControlPanel", parentTransform.gameObject);
+            FloatingControlRect = FloatingControlPanel.GetComponent<RectTransform>();
+
+            // Set up the floating panel's RectTransform
+            if (FloatingControlRect != null)
+            {
+                // Set initial position relative to the root object
+                FloatingControlRect.anchorMin = new Vector2(0.5f, 0.5f);
+                FloatingControlRect.anchorMax = new Vector2(0.5f, 0.5f);
+                FloatingControlRect.pivot = new Vector2(0.5f, 0);  // Pivot at bottom center
+
+                // Set the panel size
+                FloatingControlRect.sizeDelta = new Vector2(200, 30);
+            }
+
+            // Add background image
+            var bgImage = FloatingControlPanel.AddComponent<Image>();
+            bgImage.type = Image.Type.Sliced;
+            bgImage.color = Theme.SliderNormal;
+
+            // Add horizontal layout
+            var layout = FloatingControlPanel.AddComponent<HorizontalLayoutGroup>();
+            layout.padding = new RectOffset() { left = 4, top = 4, right = 4, bottom = 4 };
+            layout.spacing = 4;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = true;
+
+            // Create scale slider
+            var scaleSlider = UIFactory.CreateSlider(FloatingControlPanel, "ScaleSlider", out var slider);
+
+            if (slider != null)
+            {
+                // Configure the slider
+                slider.value = scaleFactor;
+                slider.minValue = 0.1f;
+                slider.maxValue = 3.0f;
+
+                // Set up the layout element for the slider
+                var sliderLayoutElement = scaleSlider.AddComponent<LayoutElement>();
+                sliderLayoutElement.minHeight = 20;
+                sliderLayoutElement.minWidth = 150;
+                sliderLayoutElement.preferredWidth = 150;
+                sliderLayoutElement.flexibleWidth = 0;
+
+                // Register the value change callback
+                slider.onValueChanged.AddListener(new Action<float>(OnScaleValueChanged));
+            }
+        }
+
+        private void UpdateFloatingPanelPosition()
+        {
+            if (RootRect == null || FloatingControlRect == null)
+                return;
+
+            // Calculate the position above the root object
+            Vector2 rootPos = RootRect.anchoredPosition;
+            float yOffset = (RootRect.rect.height / 2) + _floatingPanelOffset.y;
+
+            // Position the floating panel above the target
+            FloatingControlRect.anchoredPosition = new Vector2(rootPos.x, rootPos.y + yOffset);
+        }
+
+
+        private void ConstructUI()
         {
             if (RootObject == null)
                 return;
@@ -39,78 +127,6 @@ namespace UIBuddy.UI
             bgImage.type = Image.Type.Sliced;
             bgImage.color = Theme.PanelBackground;
 
-            // Create title bar
-            TitleBar = new GameObject("TitleBar");
-            TitleBar.transform.SetParent(RootObject.transform, false);
-
-            var titleRect = TitleBar.AddComponent<RectTransform>();
-            titleRect.anchorMin = new Vector2(0, 1);
-            titleRect.anchorMax = new Vector2(1, 1);
-            titleRect.pivot = new Vector2(0.5f, 1);
-            titleRect.sizeDelta = new Vector2(0, 25);
-            titleRect.anchoredPosition = new Vector2(0, 0);
-
-            // Add title bar background
-            var titleBg = TitleBar.AddComponent<Image>();
-            titleBg.type = Image.Type.Sliced;
-            titleBg.color = Theme.SliderNormal;
-
-            // Add horizontal layout
-            var titleLayout = TitleBar.AddComponent<HorizontalLayoutGroup>();
-            //titleLayout.padding = new RectOffset(4, 4, 2, 2);
-            titleLayout.spacing = 4;
-            titleLayout.childAlignment = TextAnchor.MiddleLeft;
-            titleLayout.childControlWidth = true;
-            titleLayout.childControlHeight = true;
-            titleLayout.childForceExpandWidth = false;
-            titleLayout.childForceExpandHeight = true;
-
-            // Create scale slider directly without using UIFactory.CreateSlider
-            var scaleSliderObj = new GameObject("ScaleSlider");
-            scaleSliderObj.transform.SetParent(TitleBar.transform, false);
-
-            var sliderLayoutElement = scaleSliderObj.AddComponent<LayoutElement>();
-            sliderLayoutElement.minHeight = 20;
-            sliderLayoutElement.minWidth = 100;
-            sliderLayoutElement.preferredWidth = 100;
-            sliderLayoutElement.flexibleWidth = 0;
-            sliderLayoutElement.flexibleHeight = 0;
-
-            // Use factory method for slider which should be safer
-            var scaleSlider = UIFactory.CreateSlider(TitleBar, "ScaleSlider", out var slider);
-
-            if (slider != null)
-            {
-                slider.value = scaleFactor;
-                slider.minValue = 0.1f;
-                slider.maxValue = 3.0f;
-
-                slider.onValueChanged.AddListener(new Action<float>(value => ScaleChanged?.Invoke(value)));
-            }
-
-            // Create close button using the factory
-            /*ar closeButton = UIFactory.CreateButton(TitleBar, "CloseButton", "X");
-            if (closeButton != null && closeButton.Component != null)
-            {
-                var buttonLayoutElement = closeButton.Component.gameObject.AddComponent<LayoutElement>();
-                buttonLayoutElement.minHeight = 20;
-                buttonLayoutElement.minWidth = 25;
-                buttonLayoutElement.flexibleWidth = 0;
-
-                // Set close functionality
-                closeButton.OnClick = OnCloseButtonClicked;
-            }*/
-
-            // Create content area
-            var contentArea = new GameObject("ContentArea");
-            contentArea.transform.SetParent(RootObject.transform, false);
-
-            var contentRect = contentArea.AddComponent<RectTransform>();
-            contentRect.anchorMin = new Vector2(0, 0);
-            contentRect.anchorMax = new Vector2(1, 1);
-            contentRect.offsetMin = new Vector2(0, 25);
-            contentRect.offsetMax = new Vector2(0, 0);
-
             // Activate the UI
             RootObject.SetActive(true);
         }
@@ -128,5 +144,20 @@ namespace UIBuddy.UI
                 RootObject.SetActive(false);
         }
 
+        public void Update()
+        {
+            // Check if the root object has moved
+            if (RootRect != null && FloatingControlRect != null)
+            {
+                Vector2 currentPosition = RootRect.anchoredPosition;
+
+                // Only update if position has changed
+                if (currentPosition != _lastRootPosition)
+                {
+                    _lastRootPosition = currentPosition;
+                    UpdateFloatingPanelPosition();
+                }
+            }
+        }
     }
 }

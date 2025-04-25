@@ -66,6 +66,8 @@ public sealed class UIElementDrag: UIElement
                 OnEndDrag();
             }
         }
+
+        ControlPanel?.Update();
     }
 
     #region DRAGGING

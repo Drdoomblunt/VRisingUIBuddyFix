@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
+using static Il2CppSystem.Linq.Expressions.Interpreter.NullableMethodCallInstruction;
 
 namespace UIBuddy.UI
 {
@@ -15,6 +16,7 @@ namespace UIBuddy.UI
         private readonly Vector2 _floatingPanelOffset = new Vector2(0, 10);
         // Track the last position to detect changes
         private Vector2 _lastRootPosition;
+        private float _stepSize = 0.05f;
 
         private RectTransform RootRect { get; set; }
         public Action<float> ScaleChanged { get; set; }
@@ -75,10 +77,11 @@ namespace UIBuddy.UI
 
             if (slider != null)
             {
+                ScaleSlider = slider;
                 // Configure the slider
                 slider.value = scaleFactor;
-                slider.minValue = 0.1f;
-                slider.maxValue = 3.0f;
+                slider.minValue = 0.2f;
+                slider.maxValue = 2.0f;
 
                 // Set up the layout element for the slider
                 var sliderLayoutElement = scaleSlider.AddComponent<LayoutElement>();
@@ -90,6 +93,14 @@ namespace UIBuddy.UI
                 // Register the value change callback
                 slider.onValueChanged.AddListener(new Action<float>(OnScaleValueChanged));
             }
+        }
+
+        public Slider ScaleSlider { get; set; }
+
+        private float RoundToStepSize(float value)
+        {
+            // Round the value to the nearest step
+            return Mathf.Round(value / _stepSize) * _stepSize;
         }
 
         private void UpdateFloatingPanelPosition()
@@ -134,6 +145,15 @@ namespace UIBuddy.UI
         // Separate methods to avoid lambda expressions which might cause issues
         private void OnScaleValueChanged(float value)
         {
+            // Round to the nearest step
+            float steppedValue = RoundToStepSize(value);
+
+            // Only update if the value has actually changed to avoid infinite loops
+            if (Math.Abs(ScaleSlider.value - steppedValue) > 0.001f)
+            {
+                ScaleSlider.value = steppedValue;
+            }
+
             if (ScaleChanged != null)
                 ScaleChanged(value);
         }

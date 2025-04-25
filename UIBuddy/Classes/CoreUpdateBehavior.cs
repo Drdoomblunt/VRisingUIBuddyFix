@@ -19,6 +19,8 @@ public class CoreUpdateBehavior : MonoBehaviour
 
     protected void Update()
     {
+        CoroutineUtility.TickRoutines();
+
         InputManager.Update();
         PanelManager.Instance?.Update();
     }

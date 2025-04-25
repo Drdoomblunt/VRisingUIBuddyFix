@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UIBuddy.Classes;
 
 namespace UIBuddy.UI
 {
@@ -10,6 +12,10 @@ namespace UIBuddy.UI
         // UI Components
         private TextMeshProUGUI _titleText;
         private TextMeshProUGUI _nameValueText;
+        private TextMeshProUGUI _nameLabelText;
+        private TextMeshProUGUI _scaleLabelText;
+        private TextMeshProUGUI _textMeshScale;
+        private TextMeshProUGUI _placeholderScale;
         private Slider _scaleSlider;
         private TMP_InputField _scaleInputField;
         private Slider _rotationSlider;
@@ -17,6 +23,12 @@ namespace UIBuddy.UI
 
         private UIElement _selectedUIElement;
         private bool _updatingUI = false;
+        private GameObject _titleBar;
+        private GameObject _nameValue;
+        private GameObject _nameLabel;
+        private GameObject _scaleLabel;
+        private GameObject _textComponentScale;
+        private GameObject _placeholderObjScale;
 
         // Properties
         public UIElement SelectedUIElement
@@ -68,7 +80,7 @@ namespace UIBuddy.UI
             // Create content rows
             CreateNameRow(CustomUIObject);
             CreateScaleRow(CustomUIObject);
-            CreateRotationRow(CustomUIObject);
+            //CreateRotationRow(CustomUIObject);
 
             // Position panel at the top right of the screen
             Rect.anchorMin = new Vector2(1, 1);
@@ -76,28 +88,100 @@ namespace UIBuddy.UI
             Rect.pivot = new Vector2(1, 1);
             Rect.anchoredPosition = new Vector2(-20, -20);
 
+            CoroutineUtility.StartCoroutine(LateSetupCoroutine());
+        }
+
+        private IEnumerator LateSetupCoroutine()
+        {
+            yield return null;
+
+            LateConstructUI();
             // Activate the UI
             CustomUIObject.SetActive(true);
         }
 
+        private void LateConstructUI()
+        {
+            // Add title text
+            _titleText = _titleBar.GetComponent<TextMeshProUGUI>();
+            if (_titleText != null)
+            {
+                _titleText.text = "UIBuddy";
+                _titleText.font = UIFactory.Font;
+                _titleText.fontMaterial = UIFactory.FontMaterial;
+                _titleText.fontSize = 18;
+                _titleText.alignment = TextAlignmentOptions.Center;
+                _titleText.color = Theme.DefaultText;
+            }
+
+            _nameValueText = _nameValue.GetComponent<TextMeshProUGUI>();
+            if (_nameLabelText != null)
+            {
+                _nameValueText.text = "None";
+                _nameValueText.font = UIFactory.Font;
+                _nameValueText.fontMaterial = UIFactory.FontMaterial;
+                _nameValueText.fontSize = 14;
+                _nameValueText.alignment = TextAlignmentOptions.Left;
+                _nameValueText.color = Theme.DefaultText;
+            }
+
+            _nameLabelText = _nameLabel.GetComponent<TextMeshProUGUI>();
+            if (_nameLabelText != null)
+            {
+                _nameLabelText.text = "Name:";
+                _nameLabelText.font = UIFactory.Font;
+                _nameLabelText.fontMaterial = UIFactory.FontMaterial;
+                _nameLabelText.fontSize = 14;
+                _nameLabelText.alignment = TextAlignmentOptions.Left;
+                _nameLabelText.color = Theme.DefaultText;
+            }
+
+            _scaleLabelText = _scaleLabel.GetComponent<TextMeshProUGUI>();
+            if (_scaleLabelText != null)
+            {
+                _scaleLabelText.text = "Scale:";
+                _scaleLabelText.font = UIFactory.Font;
+                _scaleLabelText.fontMaterial = UIFactory.FontMaterial;
+                _scaleLabelText.fontSize = 14;
+                _scaleLabelText.alignment = TextAlignmentOptions.Left;
+                _scaleLabelText.color = Theme.DefaultText;
+            }
+
+            _textMeshScale = _textComponentScale.GetComponent<TextMeshProUGUI>();
+            if (_textMeshScale != null)
+            {
+                _textMeshScale.font = UIFactory.Font;
+                _textMeshScale.fontMaterial = UIFactory.FontMaterial;
+                _textMeshScale.fontSize = 14;
+                _textMeshScale.alignment = TextAlignmentOptions.Center;
+                _textMeshScale.color = Theme.DefaultText;
+                _scaleInputField.textComponent = _textMeshScale;
+            }
+            
+            _placeholderScale = _placeholderObjScale.GetComponent<TextMeshProUGUI>();
+            if (_placeholderScale != null)
+            {
+                _placeholderScale.font = UIFactory.Font;
+                _placeholderScale.fontMaterial = UIFactory.FontMaterial;
+                _placeholderScale.fontSize = 14;
+                _placeholderScale.alignment = TextAlignmentOptions.Center;
+                _placeholderScale.text = "Scale";
+                _placeholderScale.color =
+                    new Color(Theme.DefaultText.r, Theme.DefaultText.g, Theme.DefaultText.b, 0.5f);
+                _scaleInputField.placeholder = _placeholderScale;
+            }
+        }
+
         private void CreateTitleBar(GameObject parent)
         {
-            var titleBar = UIFactory.CreateUIObject("TitleBar", parent);
-            UIFactory.SetLayoutElement(titleBar, minHeight: 30, preferredHeight: 30);
+            _titleBar = UIFactory.CreateUIObject("TitleBar", parent);
+            UIFactory.SetLayoutElement(_titleBar, minHeight: 30, preferredHeight: 30);
 
             // Add background image
-            var bgImage = titleBar.AddComponent<Image>();
+            var bgImage = _titleBar.AddComponent<Image>();
             bgImage.type = Image.Type.Sliced;
             bgImage.color = Theme.SliderNormal;
-
-            // Add title text
-            _titleText = titleBar.AddComponent<TextMeshProUGUI>();
-            _titleText.text = "UIBuddy";
-            _titleText.font = UIFactory.Font;
-            _titleText.fontMaterial = UIFactory.FontMaterial;
-            _titleText.fontSize = 18;
-            _titleText.alignment = TextAlignmentOptions.Center;
-            _titleText.color = Theme.DefaultText;
+            _titleBar.AddComponent<TextMeshProUGUI>();
         }
 
         private void CreateNameRow(GameObject parent)
@@ -113,26 +197,14 @@ namespace UIBuddy.UI
             UIFactory.SetLayoutElement(nameRow, minHeight: 30, preferredHeight: 30);
 
             // Name label
-            var nameLabel = UIFactory.CreateUIObject("NameLabel", nameRow);
-            var nameLabelText = nameLabel.AddComponent<TextMeshProUGUI>();
-            nameLabelText.text = "Name:";
-            nameLabelText.font = UIFactory.Font;
-            nameLabelText.fontMaterial = UIFactory.FontMaterial;
-            nameLabelText.fontSize = 14;
-            nameLabelText.alignment = TextAlignmentOptions.Left;
-            nameLabelText.color = Theme.DefaultText;
-            UIFactory.SetLayoutElement(nameLabel, minWidth: 70, preferredWidth: 70);
+            _nameLabel = UIFactory.CreateUIObject("NameLabel", nameRow);
+            //////_nameLabel.AddComponent<TextMeshProUGUI>();
+            UIFactory.SetLayoutElement(_nameLabel, minWidth: 70, preferredWidth: 70);
 
             // Name value
-            var nameValue = UIFactory.CreateUIObject("NameValue", nameRow);
-            _nameValueText = nameValue.AddComponent<TextMeshProUGUI>();
-            _nameValueText.text = "None";
-            _nameValueText.font = UIFactory.Font;
-            _nameValueText.fontMaterial = UIFactory.FontMaterial;
-            _nameValueText.fontSize = 14;
-            _nameValueText.alignment = TextAlignmentOptions.Left;
-            _nameValueText.color = Theme.DefaultText;
-            UIFactory.SetLayoutElement(nameValue, flexibleWidth: 1);
+            _nameValue = UIFactory.CreateUIObject("NameValue", nameRow);
+            //////////_nameValue.AddComponent<TextMeshProUGUI>();
+            UIFactory.SetLayoutElement(_nameValue, flexibleWidth: 1);
         }
 
         private void CreateScaleRow(GameObject parent)
@@ -148,15 +220,9 @@ namespace UIBuddy.UI
             UIFactory.SetLayoutElement(scaleRow, minHeight: 40, preferredHeight: 40);
 
             // Scale label
-            var scaleLabel = UIFactory.CreateUIObject("ScaleLabel", scaleRow);
-            var scaleLabelText = scaleLabel.AddComponent<TextMeshProUGUI>();
-            scaleLabelText.text = "Scale:";
-            scaleLabelText.font = UIFactory.Font;
-            scaleLabelText.fontMaterial = UIFactory.FontMaterial;
-            scaleLabelText.fontSize = 14;
-            scaleLabelText.alignment = TextAlignmentOptions.Left;
-            scaleLabelText.color = Theme.DefaultText;
-            UIFactory.SetLayoutElement(scaleLabel, minWidth: 70, preferredWidth: 70);
+            _scaleLabel = UIFactory.CreateUIObject("ScaleLabel", scaleRow);
+            //////_scaleLabel.AddComponent<TextMeshProUGUI>();
+            UIFactory.SetLayoutElement(_scaleLabel, minWidth: 70, preferredWidth: 70);
 
             // Scale slider
             var sliderObj = UIFactory.CreateSlider(scaleRow, "ScaleSlider", out var slider);
@@ -178,27 +244,14 @@ namespace UIBuddy.UI
             inputImage.color = Theme.SliderFill;
 
             var textArea = UIFactory.CreateUIObject("Text Area", inputObj);
-            var textComponent = UIFactory.CreateUIObject("Text", textArea);
-            var placeholderObj = UIFactory.CreateUIObject("Placeholder", textArea);
+            _textComponentScale = UIFactory.CreateUIObject("Text", textArea);
+            _placeholderObjScale = UIFactory.CreateUIObject("Placeholder", textArea);
 
-            var textMesh = textComponent.AddComponent<TextMeshProUGUI>();
-            textMesh.font = UIFactory.Font;
-            textMesh.fontMaterial = UIFactory.FontMaterial;
-            textMesh.fontSize = 14;
-            textMesh.alignment = TextAlignmentOptions.Center;
-            textMesh.color = Theme.DefaultText;
+            ////_textComponentScale.AddComponent<TextMeshProUGUI>();
 
-            var placeholder = placeholderObj.AddComponent<TextMeshProUGUI>();
-            placeholder.font = UIFactory.Font;
-            placeholder.fontMaterial = UIFactory.FontMaterial;
-            placeholder.fontSize = 14;
-            placeholder.alignment = TextAlignmentOptions.Center;
-            placeholder.text = "Scale";
-            placeholder.color = new Color(Theme.DefaultText.r, Theme.DefaultText.g, Theme.DefaultText.b, 0.5f);
+            ////////_placeholderObjScale.AddComponent<TextMeshProUGUI>();
 
             _scaleInputField.textViewport = textArea.GetComponent<RectTransform>();
-            _scaleInputField.textComponent = textMesh;
-            _scaleInputField.placeholder = placeholder;
             _scaleInputField.onEndEdit.AddListener(new Action<string>(OnScaleInputChanged));
 
             UIFactory.SetLayoutElement(inputObj, minWidth: 60, preferredWidth: 60);

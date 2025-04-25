@@ -4,11 +4,10 @@ using UnityEngine;
 
 namespace UIBuddy.UI;
 
-public sealed class UIElementDrag: UIElement
+public class UIElementDrag: UIElement
 {
     // Instance
     public bool AllowDrag => CanDrag;
-    private readonly string _name;
 
     public event Action OnFinishDrag;
 
@@ -24,7 +23,6 @@ public sealed class UIElementDrag: UIElement
     public UIElementDrag(string gameObjectName)
         : base(gameObjectName)
     {
-        _name = gameObjectName;
     }
 
     internal void Update(MouseState.ButtonState state, Vector3 rawMousePos)

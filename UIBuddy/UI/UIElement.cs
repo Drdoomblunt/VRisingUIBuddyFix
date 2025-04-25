@@ -1,5 +1,6 @@
 ﻿using System;
 using HarmonyLib;
+using UIBuddy.Classes;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,7 +26,15 @@ public abstract class UIElement
     protected UIElement(string gameObjectName)
     {
         Name = gameObjectName;
-        _gameObject = GameObject.Find(gameObjectName);
+        if (string.IsNullOrEmpty(gameObjectName))
+        {
+            _gameObject = UIFactory.CreateUIObject($"Panel_{Guid.NewGuid()}", PanelManager.CanvasRoot);
+            _gameObject.AddComponent<CanvasRenderer>();
+        }
+        else
+        {
+            _gameObject = GameObject.Find(gameObjectName);
+        }
     }
 
     public bool Initialize()
@@ -48,10 +57,34 @@ public abstract class UIElement
         if(OwnerCanvasScaler == null)
             _originalScaleFactor = Transform.localScale.x;
 
-        ControlPanel = new UIElementControlPanel(_gameObject, _originalScaleFactor != 0f ? _originalScaleFactor : 1f);
-        ControlPanel.ScaleChanged += OnScaleChanged;
+        ConstructUI();
         return true;
     }
+
+    protected virtual void ConstructUI()
+    {
+        // Get or add RectTransform
+        CustomUIObject = UIFactory.CreateUIObject($"MarkPanel_{Guid.NewGuid()}", _gameObject);
+        CustomUIRect = CustomUIObject.GetComponent<RectTransform>();
+
+        // Set anchors manually using individual values instead of Vector2
+        CustomUIRect.anchorMin = new Vector2(0, 0);
+        CustomUIRect.anchorMax = new Vector2(1, 1);
+        CustomUIRect.anchoredPosition = new Vector2(0, 0);
+        CustomUIRect.sizeDelta = new Vector2(0, 0);
+
+        // Add background image
+        var bgImage = CustomUIObject.AddComponent<Image>();
+        bgImage.type = Image.Type.Sliced;
+        bgImage.color = Theme.PanelBackground;
+
+        // Activate the UI
+        CustomUIObject.SetActive(true);
+    }
+
+    public RectTransform CustomUIRect { get; set; }
+
+    public GameObject CustomUIObject { get; set; }
 
 
     private void OnScaleChanged(float value)

@@ -92,7 +92,7 @@ public abstract class UIElement
         ApplyScale(value);
     }
 
-    protected void ApplyScale(float value)
+    public void ApplyScale(float value)
     {
         if (OwnerCanvasScaler == null && Transform == null)
             return;

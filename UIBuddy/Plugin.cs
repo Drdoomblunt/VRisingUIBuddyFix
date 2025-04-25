@@ -39,13 +39,23 @@ namespace UIBuddy
 
         public static void UIOnInitialize()
         {
-            _updateBehavior = new CoreUpdateBehavior();
-            _updateBehavior.Setup();
+            try
+            {
+                Log.LogInfo("Initializing UIBuddy...");
+                _updateBehavior = new CoreUpdateBehavior();
+                _updateBehavior.Setup();
 
-            _pm = new PanelManager();
-           _pm.AddDrag("SLS logo");
-           _pm.AddDrag(null);
-            //_pm.AddDrag("BottomBar(Clone)");
+                _pm = new PanelManager();
+                _pm.AddDrag("SLS logo");
+                _pm.AddDrag(null);
+
+                Log.LogInfo("UIBuddy initialized successfully");
+            }
+            catch (System.Exception ex)
+            {
+                Log.LogError($"Error initializing UIBuddy: {ex.Message}");
+                Log.LogError(ex.StackTrace);
+            }
         }
 
         public static void Reset()

@@ -35,8 +35,14 @@ public abstract class UIElement
         OwnerCanvas = _gameObject.GetComponentInParent<Canvas>();
         OwnerCanvasScaler = _gameObject.GetComponentInParent<CanvasScaler>();
 
-        ControlPanel = new UIElementControlPanel(_gameObject);
+        ControlPanel = new UIElementControlPanel(_gameObject, OwnerCanvasScaler.scaleFactor);
+        ControlPanel.ScaleChanged += OnScaleChanged;
         return true;
+    }
+
+    private void OnScaleChanged(float value)
+    {
+        OwnerCanvasScaler.scaleFactor = value;
     }
 
     public virtual void EnsureValidPosition()

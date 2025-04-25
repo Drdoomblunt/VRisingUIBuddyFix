@@ -20,6 +20,12 @@ namespace UIBuddy.Classes
         {
             Instance = this;
             CreateRootCanvas();
+            CreateMainPanel();
+        }
+
+        private void CreateMainPanel()
+        {
+            
         }
 
         private static void CreateRootCanvas()

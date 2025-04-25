@@ -38,7 +38,7 @@ namespace UIBuddy.UI
         private void CreateFloatingControlPanel(float scaleFactor)
         {
             // Create the floating panel in the same parent as the root object
-            Transform parentTransform = RootObject.transform.parent;
+            Transform parentTransform = RootObject.transform.parent?.parent ?? RootObject.transform.parent;
             if (parentTransform == null)
                 return;
 

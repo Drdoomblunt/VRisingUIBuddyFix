@@ -17,6 +17,7 @@ public abstract class UIElement
     public Canvas OwnerCanvas { get; private set; }
     public CanvasScaler OwnerCanvasScaler { get; private set; }
     public Transform Transform { get; set; }
+    public Vector2 ReferenceResolution { get; set; }
 
     // Track the original scale to allow proper reset
     private float _originalScaleFactor;
@@ -111,6 +112,11 @@ public abstract class UIElement
         Vector2 pos = Rect.anchoredPosition;
         Vector2 dimensions = ReferenceResolution;
 
+        var x = Rect.anchorMax.x;
+        var y = Rect.anchorMax.y;
+        var mx = Rect.anchorMin.x;
+        var my = Rect.anchorMin.y;
+
         float halfW = dimensions.x * 0.5f;
         float halfH = dimensions.y * 0.5f;
 
@@ -125,5 +131,4 @@ public abstract class UIElement
         Rect.anchoredPosition = pos;
     }
 
-    public Vector2 ReferenceResolution { get; set; }
 }

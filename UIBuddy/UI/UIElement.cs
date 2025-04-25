@@ -10,7 +10,7 @@ public abstract class UIElement
     private readonly GameObject _gameObject;
     public RectTransform Rect;
     public UIElementControlPanel ControlPanel;
-    private readonly string _name;
+    public readonly string Name;
     public bool CanDrag => true;
     public bool IsPinned => false;
 
@@ -24,7 +24,7 @@ public abstract class UIElement
 
     protected UIElement(string gameObjectName)
     {
-        _name = gameObjectName;
+        Name = gameObjectName;
         _gameObject = GameObject.Find(gameObjectName);
     }
 
@@ -32,7 +32,7 @@ public abstract class UIElement
     {
         if (_gameObject == null)
         {
-            Plugin.Log.LogWarning($"Failed to initialize UIElement: {_name}");
+            Plugin.Log.LogWarning($"Failed to initialize UIElement: {Name}");
             return false;
         }
 
@@ -82,11 +82,11 @@ public abstract class UIElement
                         Canvas.ForceUpdateCanvases();
                     }
 
-                    Plugin.Log.LogInfo($"Scale updated to {value} for {_name}");
+                    Plugin.Log.LogInfo($"Scale updated to {value} for {Name}");
                 }
                 else
                 {
-                    Plugin.Log.LogWarning($"Could not find scaleFactor field for {_name}");
+                    Plugin.Log.LogWarning($"Could not find scaleFactor field for {Name}");
                 }
             }
             else
@@ -96,7 +96,7 @@ public abstract class UIElement
         }
         catch (Exception ex)
         {
-            Plugin.Log.LogError($"Error applying scale to {_name}: {ex.Message}");
+            Plugin.Log.LogError($"Error applying scale to {Name}: {ex.Message}");
         }
     }
 

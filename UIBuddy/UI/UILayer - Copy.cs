@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UIBuddy.Classes;
-
+/*
 namespace UIBuddy.UI
 {
     public class UILayer : UIElementDrag
@@ -478,3 +478,4 @@ namespace UIBuddy.UI
         }
     }
 }
+*/

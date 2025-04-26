@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System;
+using TMPro;
 using UIBuddy.Classes;
 using UIBuddy.UI.Classes;
 using UnityEngine;
@@ -31,6 +32,110 @@ namespace UIBuddy.UI
             return obj;
         }
 
+        public static LabelRef CreateLabel(GameObject parent, string name, string defaultText, TextAlignmentOptions alignment = TextAlignmentOptions.Center,
+            Color? color = null, int fontSize = 14)
+        {
+            var obj = CreateUIObject(name, parent);
+            var textComp = obj.AddComponent<TextMeshProUGUI>();
+
+
+            textComp.color = color ?? Theme.DefaultText;
+            textComp.font = Font;
+            //textComp.fontMaterial = FontMaterial;
+
+            textComp.text = defaultText;
+            textComp.alignment = alignment;
+            textComp.fontSize = fontSize;
+
+            try
+            {
+                //textComp.outlineWidth = 0.15f;
+                //textComp.outlineColor = Color.black;
+            }
+            catch (Exception)
+            {
+                // This can throw if the mod is attempting to run this when exiting the application.
+            }
+
+            return new LabelRef
+            {
+                GameObject = obj,
+                TextMesh = textComp
+            };
+        }
+
+        public static InputFieldRef CreateInputField(GameObject parent, string name, string placeHolderText, int charLimit = 255)
+        {
+            GameObject mainObj = CreateUIObject(name, parent);
+
+            Image mainImage = mainObj.AddComponent<Image>();
+            mainImage.type = Image.Type.Sliced;
+            mainImage.color = Theme.DarkBackground;
+
+            TMP_InputField inputField = mainObj.AddComponent<TMP_InputField>();
+            Navigation nav = inputField.navigation;
+            nav.mode = Navigation.Mode.None;
+            inputField.navigation = nav;
+            inputField.lineType = TMP_InputField.LineType.SingleLine;
+            inputField.interactable = true;
+            inputField.transition = Selectable.Transition.ColorTint;
+            inputField.targetGraphic = mainImage;
+
+            var colourBlock = new ColorBlock()
+            {
+                normalColor = Theme.InputFieldNormal,
+                highlightedColor = Theme.InputFieldHighlighted,
+                pressedColor = Theme.InputFieldPressed,
+                colorMultiplier = 1
+            };
+            inputField.colors = colourBlock;
+
+            GameObject textArea = CreateUIObject("TextArea", mainObj);
+            textArea.AddComponent<RectMask2D>();
+
+            RectTransform textAreaRect = textArea.GetComponent<RectTransform>();
+            textAreaRect.anchorMin = Vector2.zero;
+            textAreaRect.anchorMax = Vector2.one;
+            textAreaRect.offsetMin = Vector2.zero;
+            textAreaRect.offsetMax = Vector2.zero;
+
+            GameObject placeHolderObj = CreateUIObject("Placeholder", textArea);
+            TextMeshProUGUI placeholderText = placeHolderObj.AddComponent<TextMeshProUGUI>();
+            SetDefaultTextValues(placeholderText);
+            placeholderText.text = placeHolderText ?? "...";
+            placeholderText.color = Theme.PlaceHolderText;
+            placeholderText.enableWordWrapping = true;
+            placeholderText.alignment = TextAlignmentOptions.MidlineLeft;
+            placeholderText.fontSize = 14;
+
+            RectTransform placeHolderRect = placeHolderObj.GetComponent<RectTransform>();
+            placeHolderRect.anchorMin = Vector2.zero;
+            placeHolderRect.anchorMax = Vector2.one;
+            placeHolderRect.offsetMin = Vector2.zero;
+            placeHolderRect.offsetMax = Vector2.zero;
+
+            inputField.placeholder = placeholderText;
+
+            GameObject inputTextObj = CreateUIObject("Text", textArea);
+            TextMeshProUGUI inputText = inputTextObj.AddComponent<TextMeshProUGUI>();
+            SetDefaultTextValues(inputText);
+            inputText.text = "";
+            inputText.color = Theme.DefaultText;
+            inputText.enableWordWrapping = true;
+            inputText.alignment = TextAlignmentOptions.MidlineLeft;
+            inputText.fontSize = 14;
+
+            RectTransform inputTextRect = inputTextObj.GetComponent<RectTransform>();
+            inputTextRect.anchorMin = Vector2.zero;
+            inputTextRect.anchorMax = Vector2.one;
+            inputTextRect.offsetMin = Vector2.zero;
+            inputTextRect.offsetMax = Vector2.zero;
+
+            inputField.textComponent = inputText;
+            inputField.characterLimit = charLimit;
+
+            return new InputFieldRef(inputField);
+        }
 
         public static LayoutElement SetLayoutElement(GameObject gameObject, int? minWidth = null, int? minHeight = null,
             int? flexibleWidth = null, int? flexibleHeight = null, int? preferredWidth = null,

@@ -42,6 +42,7 @@ namespace UIBuddy
             try
             {
                 Log.LogInfo("Initializing UIBuddy...");
+                EnsureThemeInitialized();
                 _updateBehavior = new CoreUpdateBehavior();
                 _updateBehavior.Setup();
 
@@ -56,6 +57,13 @@ namespace UIBuddy
                 Log.LogError($"Error initializing UIBuddy: {ex.Message}");
                 Log.LogError(ex.StackTrace);
             }
+        }
+
+        public static void EnsureThemeInitialized()
+        {
+            // Force Theme class initialization early
+            var tempOpacity = Theme.Opacity;
+            Plugin.Log.LogInfo($"Theme initialized with opacity: {tempOpacity}");
         }
 
         public static void Reset()

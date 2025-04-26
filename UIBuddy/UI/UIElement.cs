@@ -20,6 +20,10 @@ public abstract class UIElement
     public Transform Transform { get; set; }
     public Vector2 ReferenceResolution { get; set; }
 
+    public RectTransform CustomUIRect { get; set; }
+
+    public GameObject CustomUIObject { get; set; }
+
     // Track the original scale to allow proper reset
     private float _originalScaleFactor;
 
@@ -28,7 +32,7 @@ public abstract class UIElement
         Name = gameObjectName;
         if (string.IsNullOrEmpty(gameObjectName))
         {
-            _gameObject = UIFactory.CreateUIObject($"Panel_{Guid.NewGuid()}", PanelManager.CanvasRoot);
+            _gameObject = UIFactory.CreateUIObject($"Panel_{Guid.NewGuid()}", PanelManager.PanelHolder);
             //_gameObject.AddComponent<CanvasRenderer>();
         }
         else
@@ -81,10 +85,6 @@ public abstract class UIElement
         // Activate the UI
         CustomUIObject.SetActive(true);
     }
-
-    public RectTransform CustomUIRect { get; set; }
-
-    public GameObject CustomUIObject { get; set; }
 
 
     private void OnScaleChanged(float value)

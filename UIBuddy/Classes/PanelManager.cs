@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using UIBuddy.UI;
+using UIBuddy.UI.Classes;
+using UIBuddy.UI.Panel;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,15 +12,18 @@ namespace UIBuddy.Classes
     {
         private Vector3 _previousMousePosition;
         private MouseState.ButtonState _previousMouseButtonState;
-        private readonly List<UIElementDrag> _draggers = new();
+        private readonly List<IUIElementDrag> _draggers = new();
         public static bool WasAnyDragging;
         public static bool DraggerHandledThisFrame;
         protected virtual bool MouseInTargetDisplay => true;
+
         public static PanelManager Instance { get; private set; }
         public static GameObject CanvasRoot { get; private set; }
-
+        public static CanvasScaler Scaler { get; set; }
+        public static Canvas Canvas { get; set; }
+        public static GameObject PanelHolder { get; private set; }
         // Main control panel
-        public UILayer MainPanel { get; private set; }
+        public MainControlPanel MainPanel { get; private set; }
 
         public PanelManager()
         {
@@ -32,20 +37,10 @@ namespace UIBuddy.Classes
             try
             {
                 // Create the main control panel
-                MainPanel = new UILayer();
+                MainPanel = new MainControlPanel(PanelHolder);
+                _draggers.Add(MainPanel.Dragger);
+                Plugin.Log.LogInfo("Main panel created and initialized successfully");
 
-                // Initialize it
-                if (MainPanel.Initialize())
-                {
-                    // Add to draggers
-                    _draggers.Add(MainPanel);
-
-                    Plugin.Log.LogInfo("Main panel created and initialized successfully");
-                }
-                else
-                {
-                    Plugin.Log.LogError("Failed to initialize the main panel");
-                }
             }
             catch (Exception ex)
             {
@@ -56,7 +51,9 @@ namespace UIBuddy.Classes
         private static void CreateRootCanvas()
         {
             CanvasRoot = new GameObject("UIBuddyCanvas");
+            var canvasRootRect = CanvasRoot.AddComponent<RectTransform>();
             UnityEngine.Object.DontDestroyOnLoad(CanvasRoot);
+            CanvasRoot.SetActive(false);
             CanvasRoot.hideFlags |= HideFlags.HideAndDontSave;
             CanvasRoot.layer = 5;
             CanvasRoot.transform.position = new Vector3(0f, 0f, 1f);
@@ -72,13 +69,19 @@ namespace UIBuddy.Classes
             Scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             Scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
 
-            CanvasRoot.SetActive(false);
+            CanvasRoot.AddComponent<GraphicRaycaster>();
+            canvasRootRect.anchorMin = Vector2.zero;
+            canvasRootRect.anchorMax = Vector2.one;
+            canvasRootRect.pivot = new Vector2(0.5f, 0.5f);
+
+            PanelHolder = UIFactory.CreateUIObject("PanelHolder", CanvasRoot);
+            RectTransform rect = PanelHolder.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+
             CanvasRoot.SetActive(true);
         }
 
-        public static CanvasScaler Scaler { get; set; }
-
-        public static Canvas Canvas { get; set; }
 
         public void Update()
         {
@@ -104,7 +107,7 @@ namespace UIBuddy.Classes
 
             foreach (var instance in _draggers)
             {
-                if (!instance.Rect.gameObject.activeSelf)
+                if (!instance.IsActive)
                     continue;
 
                 instance.Update(state, mousePos);

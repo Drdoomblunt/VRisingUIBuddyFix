@@ -17,7 +17,10 @@ namespace UIBuddy.UI
         public static Color SelectablePressed { get; private set; }
         public static Color White { get; private set; }
         public static Color DefaultText { get; private set; }
-
+        public static Color PlaceHolderText { get; private set; }
+        public static Color InputFieldNormal { get; private set; }
+        public static Color InputFieldHighlighted { get; private set; }
+        public static Color InputFieldPressed { get; private set; }
         public static float Opacity
         {
             get => _opacity;
@@ -33,6 +36,7 @@ namespace UIBuddy.UI
             Opacity = 0.6f;
         }
 
+
         private static void UpdateColors()
         {
             PanelBackground = new Color(0.07f, 0.07f, 0.07f, Opacity);
@@ -47,6 +51,11 @@ namespace UIBuddy.UI
             SelectablePressed = new Color(0.15f, 0.15f, 0.15f, Opacity);
             DefaultText = Color.white;
             White = Color.white;
+            PlaceHolderText = SliderHandle;
+
+            InputFieldNormal = new Color(1f, 1f, 1f, Opacity);
+            InputFieldHighlighted = new Color(0.95f, 0.95f, 0.95f, Opacity);
+            InputFieldPressed = new Color(0.78f, 0.78f, 0.78f, Opacity);
         }
     }
 }

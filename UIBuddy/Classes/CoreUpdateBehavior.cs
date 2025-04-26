@@ -1,5 +1,5 @@
 ﻿using Il2CppInterop.Runtime.Injection;
-using System;
+using UIBuddy.UI.Classes;
 using UnityEngine;
 
 namespace UIBuddy.Classes;
@@ -20,6 +20,7 @@ public class CoreUpdateBehavior : MonoBehaviour
     protected void Update()
     {
         CoroutineUtility.TickRoutines();
+        InputFieldRef.UpdateInstances();
 
         InputManager.Update();
         PanelManager.Instance?.Update();

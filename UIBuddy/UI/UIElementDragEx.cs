@@ -2,19 +2,21 @@
 using UIBuddy.Classes;
 using UnityEngine;
 using UIBuddy.UI.Classes;
+using UIBuddy.UI.Panel;
 
 namespace UIBuddy.UI;
 
-public class UIElementDrag: UIElement, IUIElementDrag
+public class UIElementDragEx: IUIElementDrag
 {
     // Instance
-    public bool AllowDrag => CanDrag;
+    public bool AllowDrag => true;
 
     public event Action OnFinishDrag;
 
     // Common
     private Vector2 _initialMousePos;
     private Vector2 _initialValue;
+    private readonly IGenericPanel _panel;
 
     // Dragging
     public RectTransform DraggableArea => Rect;
@@ -23,9 +25,14 @@ public class UIElementDrag: UIElement, IUIElementDrag
 
     public bool IsActive => Rect?.gameObject?.activeSelf ?? false;
 
-    public UIElementDrag(string gameObjectName)
-        : base(gameObjectName)
+    public RectTransform Rect { get; private set; }
+
+    public bool IsPinned { get; set; }
+
+    public UIElementDragEx(GameObject dragObject, IGenericPanel panel)
     {
+        Rect = dragObject.GetComponent<RectTransform>();
+        _panel = panel;
     }
 
     public void Update(MouseState.ButtonState state, Vector3 rawMousePos)
@@ -67,8 +74,6 @@ public class UIElementDrag: UIElement, IUIElementDrag
                 OnEndDrag();
             }
         }
-
-        ControlPanel?.Update();
     }
 
     #region DRAGGING
@@ -87,9 +92,9 @@ public class UIElementDrag: UIElement, IUIElementDrag
 
         var diff = mousePos - _initialMousePos;
 
-        Rect.anchoredPosition = _initialValue + diff / OwnerCanvas.scaleFactor;
+        Rect.anchoredPosition = _initialValue + diff / _panel.GetOwnerScaleFactor();
 
-        EnsureValidPosition();
+        _panel.EnsureValidPosition();
     }
 
     public void OnEndDrag()

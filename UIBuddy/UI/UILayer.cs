@@ -63,6 +63,8 @@ namespace UIBuddy.UI
             bgImage.type = Image.Type.Sliced;
             bgImage.color = Theme.PanelBackground;
 
+            CustomUIObject.SetActive(true);
+
             // Create vertical layout for the entire panel
             var mainLayout = UIFactory.SetLayoutGroup<VerticalLayoutGroup>(CustomUIObject,
                 childControlWidth: true,
@@ -80,7 +82,7 @@ namespace UIBuddy.UI
             // Create content rows
             CreateNameRow(CustomUIObject);
             CreateScaleRow(CustomUIObject);
-            //CreateRotationRow(CustomUIObject);
+            CreateRotationRow(CustomUIObject);
 
             // Position panel at the top right of the screen
             Rect.anchorMin = new Vector2(1, 1);
@@ -198,12 +200,12 @@ namespace UIBuddy.UI
 
             // Name label
             _nameLabel = UIFactory.CreateUIObject("NameLabel", nameRow);
-            //////_nameLabel.AddComponent<TextMeshProUGUI>();
+            _nameLabel.AddComponent<TextMeshProUGUI>();
             UIFactory.SetLayoutElement(_nameLabel, minWidth: 70, preferredWidth: 70);
 
             // Name value
             _nameValue = UIFactory.CreateUIObject("NameValue", nameRow);
-            //////////_nameValue.AddComponent<TextMeshProUGUI>();
+            _nameValue.AddComponent<TextMeshProUGUI>();
             UIFactory.SetLayoutElement(_nameValue, flexibleWidth: 1);
         }
 
@@ -221,7 +223,7 @@ namespace UIBuddy.UI
 
             // Scale label
             _scaleLabel = UIFactory.CreateUIObject("ScaleLabel", scaleRow);
-            //////_scaleLabel.AddComponent<TextMeshProUGUI>();
+            _scaleLabel.AddComponent<TextMeshProUGUI>();
             UIFactory.SetLayoutElement(_scaleLabel, minWidth: 70, preferredWidth: 70);
 
             // Scale slider
@@ -247,9 +249,9 @@ namespace UIBuddy.UI
             _textComponentScale = UIFactory.CreateUIObject("Text", textArea);
             _placeholderObjScale = UIFactory.CreateUIObject("Placeholder", textArea);
 
-            ////_textComponentScale.AddComponent<TextMeshProUGUI>();
+            _textComponentScale.AddComponent<TextMeshProUGUI>();
 
-            ////////_placeholderObjScale.AddComponent<TextMeshProUGUI>();
+            _placeholderObjScale.AddComponent<TextMeshProUGUI>();
 
             _scaleInputField.textViewport = textArea.GetComponent<RectTransform>();
             _scaleInputField.onEndEdit.AddListener(new Action<string>(OnScaleInputChanged));
@@ -328,6 +330,9 @@ namespace UIBuddy.UI
 
         private void UpdateUIForSelectedElement()
         {
+            if(_nameValueText == null)
+                return;
+
             if (_selectedUIElement == null)
             {
                 // No element selected, set default values

@@ -29,7 +29,7 @@ public abstract class UIElement
         if (string.IsNullOrEmpty(gameObjectName))
         {
             _gameObject = UIFactory.CreateUIObject($"Panel_{Guid.NewGuid()}", PanelManager.CanvasRoot);
-            _gameObject.AddComponent<CanvasRenderer>();
+            //_gameObject.AddComponent<CanvasRenderer>();
         }
         else
         {

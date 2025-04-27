@@ -12,7 +12,7 @@ namespace UIBuddy.Classes
     {
         private Vector3 _previousMousePosition;
         private MouseState.ButtonState _previousMouseButtonState;
-        private readonly List<IUIElementDrag> _draggers = new();
+        private static readonly List<IUIElementDrag> _draggers = new();
         public static bool WasAnyDragging;
         public static bool DraggerHandledThisFrame;
         protected virtual bool MouseInTargetDisplay => true;
@@ -126,22 +126,29 @@ namespace UIBuddy.Classes
 
         public void AddDrag(string gameObjectName)
         {
-            var element = new UIElementDrag(gameObjectName);
+            var element = new ElementPanel(gameObjectName);
 
             if(element.Initialize())
-                _draggers.Add(element);
+                _draggers.Add(element.Dragger);
 
             // Set this element as the selected element in the main panel
             if (MainPanel != null && !string.IsNullOrEmpty(gameObjectName)
-                && MainPanel.SelectedUIElement == null)
+                && MainPanel.SelectedElementPanel == null)
             {
-                MainPanel.SelectedUIElement = element;
+                MainPanel.SelectedElementPanel = element;
             }
         }
 
         public void Dispose()
         {
             _draggers.Clear();
+        }
+
+        public static void SelectPanel(IGenericPanel panel)
+        {
+            foreach (var drag in _draggers)
+                drag.Panel.SelectPanel(false);
+            panel.SelectPanel(true);
         }
     }
 }

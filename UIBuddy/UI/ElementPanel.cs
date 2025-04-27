@@ -1,16 +1,14 @@
 ﻿using System;
 using HarmonyLib;
-using UIBuddy.Classes;
+using UIBuddy.UI.Panel;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace UIBuddy.UI;
 
-public abstract class UIElement
+public class ElementPanel: IGenericPanel
 {
-    private readonly GameObject _gameObject;
     public RectTransform Rect;
-    public UIElementControlPanel ControlPanel;
     public readonly string Name;
     public bool CanDrag => true;
     public bool IsPinned => false;
@@ -18,57 +16,56 @@ public abstract class UIElement
     public Canvas OwnerCanvas { get; private set; }
     public CanvasScaler OwnerCanvasScaler { get; private set; }
     public Transform Transform { get; set; }
+    public GameObject RootObject { get; }
     public Vector2 ReferenceResolution { get; set; }
 
     public RectTransform CustomUIRect { get; set; }
-
     public GameObject CustomUIObject { get; set; }
+    public UIElementDragEx Dragger { get; protected set; }
+    protected Outline Outline { get; set; }
 
     // Track the original scale to allow proper reset
     private float _originalScaleFactor;
 
-    protected UIElement(string gameObjectName)
+    public ElementPanel(string gameObjectName)
     {
         Name = gameObjectName;
-        if (string.IsNullOrEmpty(gameObjectName))
-        {
-            _gameObject = UIFactory.CreateUIObject($"Panel_{Guid.NewGuid()}", PanelManager.PanelHolder);
-            //_gameObject.AddComponent<CanvasRenderer>();
-        }
-        else
-        {
-            _gameObject = GameObject.Find(gameObjectName);
-        }
+        RootObject = GameObject.Find(gameObjectName);
     }
 
     public bool Initialize()
     {
-        if (_gameObject == null)
+        if (RootObject == null)
         {
             Plugin.Log.LogWarning($"Failed to initialize UIElement: {Name}");
             return false;
         }
 
-        Rect = _gameObject.GetComponent<RectTransform>();
-        OwnerCanvas = _gameObject.GetComponentInParent<Canvas>();
-        OwnerCanvasScaler = _gameObject.GetComponent<CanvasScaler>();
-        if (OwnerCanvasScaler == null)
-            ReferenceResolution = _gameObject.GetComponentInParent<CanvasScaler>()?.referenceResolution ?? Vector2.one;
+        Rect = RootObject.GetComponent<RectTransform>();
+        OwnerCanvas = RootObject.GetComponentInParent<Canvas>();
+        OwnerCanvasScaler = RootObject.GetComponent<CanvasScaler>();
+
+        ReferenceResolution = OwnerCanvasScaler?.referenceResolution ??
+                              RootObject.GetComponentInParent<CanvasScaler>()?.referenceResolution ?? 
+                              Vector2.one;
 
         if (OwnerCanvasScaler != null)
             _originalScaleFactor = OwnerCanvasScaler.scaleFactor;
-        Transform = _gameObject.GetComponent<Transform>();
+        Transform = RootObject.GetComponent<Transform>();
         if(OwnerCanvasScaler == null)
             _originalScaleFactor = Transform.localScale.x;
 
         ConstructUI();
+
+        Dragger = new UIElementDragEx(RootObject, this);
+
         return true;
     }
 
     protected virtual void ConstructUI()
     {
         // Get or add RectTransform
-        CustomUIObject = UIFactory.CreateUIObject($"MarkPanel_{Guid.NewGuid()}", _gameObject);
+        CustomUIObject = UIFactory.CreateUIObject($"MarkPanel_{Name}", RootObject);
         CustomUIRect = CustomUIObject.GetComponent<RectTransform>();
 
         // Set anchors manually using individual values instead of Vector2
@@ -82,9 +79,17 @@ public abstract class UIElement
         bgImage.type = Image.Type.Sliced;
         bgImage.color = Theme.PanelBackground;
 
+        //var titleBar = UIFactory.CreateUIObject("ContentHolder", CustomUIObject);
+        //UIFactory.CreateLabel(titleBar, "NameLabel", Name, fontSize: 20);
+
+        Outline = CustomUIObject.AddComponent<Outline>();
+        Outline.effectColor = Theme.ElementOutlineColor;
+        Outline.enabled = false;
+
         // Activate the UI
         CustomUIObject.SetActive(true);
     }
+
 
 
     private void OnScaleChanged(float value)
@@ -138,6 +143,11 @@ public abstract class UIElement
         ApplyScale(_originalScaleFactor);
     }
 
+    public float GetOwnerScaleFactor()
+    {
+        return OwnerCanvas.scaleFactor;
+    }
+
     public virtual void EnsureValidPosition()
     {
         // Prevent panel going outside screen bounds
@@ -164,4 +174,8 @@ public abstract class UIElement
         Rect.anchoredPosition = pos;
     }
 
+    public void SelectPanel(bool select)
+    {
+        Outline.enabled = select;
+    }
 }

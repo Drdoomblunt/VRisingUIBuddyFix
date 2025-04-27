@@ -8,5 +8,6 @@ namespace UIBuddy.UI.Panel
         Vector2 ReferenceResolution { get; set; }
         float GetOwnerScaleFactor();
         void EnsureValidPosition();
+        void SelectPanel(bool select);
     }
 }

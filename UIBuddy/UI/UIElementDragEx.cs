@@ -16,10 +16,10 @@ public class UIElementDragEx: IUIElementDrag
     // Common
     private Vector2 _initialMousePos;
     private Vector2 _initialValue;
-    private readonly IGenericPanel _panel;
+    public IGenericPanel Panel { get; }
 
     // Dragging
-    public RectTransform DraggableArea => Rect;
+    public RectTransform DraggableArea { get; }
 
     public bool WasDragging { get; set; }
 
@@ -31,8 +31,9 @@ public class UIElementDragEx: IUIElementDrag
 
     public UIElementDragEx(GameObject dragObject, IGenericPanel panel)
     {
-        Rect = dragObject.GetComponent<RectTransform>();
-        _panel = panel;
+        DraggableArea = dragObject.GetComponent<RectTransform>();
+        Rect = panel.RootObject.GetComponent<RectTransform>();
+        Panel = panel;
     }
 
     public void Update(MouseState.ButtonState state, Vector3 rawMousePos)
@@ -46,12 +47,7 @@ public class UIElementDragEx: IUIElementDrag
         {
             if (inDragPos)
             {
-                //UIPanel.SetActive(true);
                 PanelManager.DraggerHandledThisFrame = true;
-            }
-
-            if (inDragPos)
-            {
                 OnBeginDrag();
             }
         }
@@ -84,6 +80,8 @@ public class UIElementDragEx: IUIElementDrag
         WasDragging = true;
         _initialMousePos = InputManager.Mouse.Position;
         _initialValue = Rect.anchoredPosition;
+
+        PanelManager.SelectPanel(Panel);
     }
 
     public void OnDrag()
@@ -92,9 +90,9 @@ public class UIElementDragEx: IUIElementDrag
 
         var diff = mousePos - _initialMousePos;
 
-        Rect.anchoredPosition = _initialValue + diff / _panel.GetOwnerScaleFactor();
+        Rect.anchoredPosition = _initialValue + diff / Panel.GetOwnerScaleFactor();
 
-        _panel.EnsureValidPosition();
+        Panel.EnsureValidPosition();
     }
 
     public void OnEndDrag()

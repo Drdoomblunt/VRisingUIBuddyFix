@@ -7,7 +7,7 @@ using UIBuddy.Classes;
 
 namespace UIBuddy.UI.Panel
 {
-    public class MainControlPanel: IGenericPanel
+    public class MainControlPanel : IGenericPanel
     {
         // UI Components
         private TextMeshProUGUI _nameValueText;
@@ -16,7 +16,7 @@ namespace UIBuddy.UI.Panel
         private Slider _rotationSlider;
         private TMP_InputField _rotationInputField;
 
-        private UIElement _selectedUIElement;
+        private ElementPanel _selectedElementPanel;
         private bool _updatingUI = false;
         private GameObject _titleBar;
         private readonly Canvas _ownerCanvas;
@@ -33,12 +33,12 @@ namespace UIBuddy.UI.Panel
         }
 
         // Properties
-        public UIElement SelectedUIElement
+        public ElementPanel SelectedElementPanel
         {
-            get => _selectedUIElement;
+            get => _selectedElementPanel;
             set
             {
-                _selectedUIElement = value;
+                _selectedElementPanel = value;
                 UpdateUIForSelectedElement();
             }
         }
@@ -54,10 +54,8 @@ namespace UIBuddy.UI.Panel
             ConstructUI();
         }
 
-
         protected void ConstructUI()
         {
-            RootObject.SetActive(true);
             RootObject.SetActive(false);
 
             RootRect = RootObject.GetComponent<RectTransform>();
@@ -70,9 +68,20 @@ namespace UIBuddy.UI.Panel
             bgImage.type = Image.Type.Sliced;
             bgImage.color = Theme.PanelBackground;
 
+            // Create title bar (must be created first as we'll use it for the dragger)
+            CreateTitleBar(RootObject);
 
-            // Create vertical layout for the entire panel
-            var mainLayout = UIFactory.SetLayoutGroup<VerticalLayoutGroup>(RootObject,
+            // Create vertical layout for the content area (excludes the title bar)
+            var contentArea = UIFactory.CreateUIObject("ContentArea", RootObject);
+            var contentRect = contentArea.GetComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0, 0);
+            contentRect.anchorMax = new Vector2(1, 1);
+            contentRect.pivot = new Vector2(0.5f, 0.5f);
+            // Position below the title bar
+            contentRect.offsetMin = new Vector2(0, 0);
+            contentRect.offsetMax = new Vector2(0, -35); // Height of the title bar
+
+            var mainLayout = UIFactory.SetLayoutGroup<VerticalLayoutGroup>(contentArea,
                 childControlWidth: true,
                 childControlHeight: false,
                 spacing: 5,
@@ -82,20 +91,13 @@ namespace UIBuddy.UI.Panel
                 padRight: 5,
                 childAlignment: TextAnchor.UpperCenter);
 
-            // Create title bar
-            CreateTitleBar(RootObject);
-
             // Create content rows
-            CreateNameRow(RootObject);
-            CreateScaleRow(RootObject);
-            CreateRotationRow(RootObject);
+            CreateNameRow(contentArea);
+            CreateScaleRow(contentArea);
+            CreateRotationRow(contentArea);
 
-            // Position panel at the top right of the screen
-            /* CustomUIRect.anchorMin = new Vector2(1, 1);
-             CustomUIRect.anchorMax = new Vector2(1, 1);
-             CustomUIRect.pivot = new Vector2(1, 1);
-             CustomUIRect.anchoredPosition = new Vector2(-20, -20);*/
-            Dragger = new UIElementDragEx(RootObject, this);
+            // Create the dragger that uses the title bar for dragging
+            Dragger = new UIElementDragEx(_titleBar, this);
 
             CoroutineUtility.StartCoroutine(LateSetupCoroutine());
         }
@@ -111,12 +113,30 @@ namespace UIBuddy.UI.Panel
         private void CreateTitleBar(GameObject parent)
         {
             _titleBar = UIFactory.CreateUIObject("TitleBar", parent);
-            UIFactory.SetLayoutElement(_titleBar, minHeight: 30, preferredHeight: 30);
+            var titleRect = _titleBar.GetComponent<RectTransform>();
+
+            // Position the title bar at the top of the panel
+            titleRect.anchorMin = new Vector2(0, 1);
+            titleRect.anchorMax = new Vector2(1, 1);
+            titleRect.pivot = new Vector2(0.5f, 1);
+            titleRect.sizeDelta = new Vector2(0, 35); // Set height to 35
+            titleRect.anchoredPosition = Vector2.zero;
 
             // Add background image
             var bgImage = _titleBar.AddComponent<Image>();
             bgImage.type = Image.Type.Sliced;
             bgImage.color = Theme.SliderNormal;
+
+            // Create a horizontal layout for the title label
+            var titleLayout = UIFactory.SetLayoutGroup<HorizontalLayoutGroup>(_titleBar,
+                childControlWidth: true,
+                childControlHeight: true,
+                spacing: 0,
+                padTop: 0,
+                padBottom: 0,
+                padLeft: 10,
+                padRight: 10,
+                childAlignment: TextAnchor.MiddleCenter);
 
             UIFactory.CreateLabel(_titleBar, "TitleLabel", "BuddyUI", fontSize: 18);
         }
@@ -129,16 +149,18 @@ namespace UIBuddy.UI.Panel
                 childControlWidth: true,
                 childControlHeight: true,
                 spacing: 10,
-                new Vector4(5,5,5,5));
+                new Vector4(5, 5, 5, 5));
 
             UIFactory.SetLayoutElement(nameRow, minHeight: 30, preferredHeight: 30);
 
             // Name label
-            var nameLabel = UIFactory.CreateLabel(nameRow, "NameLabel", "Name");
+            var nameLabel = UIFactory.CreateLabel(nameRow, "NameLabel", "Name",
+                alignment: TextAlignmentOptions.Left);
             UIFactory.SetLayoutElement(nameLabel.GameObject, minWidth: 70, preferredWidth: 70);
 
             // Name value
-            var nameValue = UIFactory.CreateLabel(nameRow, "NameValue", "None");
+            var nameValue = UIFactory.CreateLabel(nameRow, "NameValue", "None",
+                alignment: TextAlignmentOptions.Left);
             _nameValueText = nameValue.TextMesh;
             UIFactory.SetLayoutElement(nameValue.GameObject, flexibleWidth: 1);
         }
@@ -151,12 +173,13 @@ namespace UIBuddy.UI.Panel
                 childControlWidth: true,
                 childControlHeight: true,
                 spacing: 10,
-                new Vector4(5,5,5,5));
+                new Vector4(5, 5, 5, 5));
 
-            UIFactory.SetLayoutElement(scaleRow, minHeight: 40, preferredHeight: 40);
+            UIFactory.SetLayoutElement(scaleRow, minHeight: 35, preferredHeight: 35);
 
             // Scale label
-            var scaleLabel = UIFactory.CreateLabel(scaleRow, "ScaleLabel", "Scale");
+            var scaleLabel = UIFactory.CreateLabel(scaleRow, "ScaleLabel", "Scale",
+                alignment: TextAlignmentOptions.Left);
             UIFactory.SetLayoutElement(scaleLabel.GameObject, minWidth: 70, preferredWidth: 70);
 
             // Scale slider
@@ -172,7 +195,7 @@ namespace UIBuddy.UI.Panel
             var scaleInputRef = UIFactory.CreateInputField(scaleRow, "ScaleInput", "");
             _scaleInputField = scaleInputRef.Component;
             scaleInputRef.OnValueChanged += OnScaleInputChanged;
-            UIFactory.SetLayoutElement(scaleInputRef.Component.gameObject, minWidth: 60, preferredWidth: 60, preferredHeight: 35, minHeight: 35);
+            UIFactory.SetLayoutElement(scaleInputRef.Component.gameObject, minWidth: 60, preferredWidth: 60, minHeight: 35, preferredHeight: 35);
         }
 
         private void CreateRotationRow(GameObject parent)
@@ -185,10 +208,11 @@ namespace UIBuddy.UI.Panel
                 spacing: 10,
                 new Vector4(5, 5, 5, 5));
 
-            UIFactory.SetLayoutElement(rotationRow, minHeight: 40, preferredHeight: 40);
+            UIFactory.SetLayoutElement(rotationRow, minHeight: 35, preferredHeight: 35);
 
             // Rotation label
-            var rotationLabel = UIFactory.CreateLabel(rotationRow, "RotationLabel", "Rotation");
+            var rotationLabel = UIFactory.CreateLabel(rotationRow, "RotationLabel", "Rotation",
+                alignment: TextAlignmentOptions.Left);
             UIFactory.SetLayoutElement(rotationLabel.GameObject, minWidth: 70, preferredWidth: 70);
 
             // Rotation slider
@@ -198,22 +222,21 @@ namespace UIBuddy.UI.Panel
             _rotationSlider.maxValue = 360.0f;
             _rotationSlider.value = 0.0f; // Default value
             _rotationSlider.onValueChanged.AddListener(new Action<float>(OnRotationSliderChanged));
-            UIFactory.SetLayoutElement(sliderObj, minWidth: 120, preferredWidth: 120, flexibleWidth: 1, preferredHeight: 35, minHeight: 35);
+            UIFactory.SetLayoutElement(sliderObj, minWidth: 120, preferredWidth: 120, flexibleWidth: 1, minHeight: 35, preferredHeight: 35);
 
             // Rotation input field
             var inputRef = UIFactory.CreateInputField(rotationRow, "RotationInput", "");
             _rotationInputField = inputRef.Component;
-            inputRef.OnValueChanged += OnScaleInputChanged;
-            UIFactory.SetLayoutElement(inputRef.Component.gameObject, minWidth: 60, preferredWidth: 60, preferredHeight: 35, minHeight: 35);
-
+            inputRef.OnValueChanged += OnRotationInputChanged;
+            UIFactory.SetLayoutElement(inputRef.Component.gameObject, minWidth: 60, preferredWidth: 60);
         }
 
         private void UpdateUIForSelectedElement()
         {
-            if(_nameValueText == null)
+            if (_nameValueText == null)
                 return;
 
-            if (_selectedUIElement == null)
+            if (_selectedElementPanel == null)
             {
                 // No element selected, set default values
                 _nameValueText.text = "None";
@@ -229,17 +252,17 @@ namespace UIBuddy.UI.Panel
             try
             {
                 // Update UI with values from the selected element
-                _nameValueText.text = _selectedUIElement.Name;
+                _nameValueText.text = _selectedElementPanel.Name;
 
                 // Get current scale
                 float currentScale = 1.0f;
-                if (_selectedUIElement.OwnerCanvasScaler != null)
+                if (_selectedElementPanel.OwnerCanvasScaler != null)
                 {
-                    currentScale = _selectedUIElement.OwnerCanvasScaler.scaleFactor;
+                    currentScale = _selectedElementPanel.OwnerCanvasScaler.scaleFactor;
                 }
-                else if (_selectedUIElement.Transform != null)
+                else if (_selectedElementPanel.Transform != null)
                 {
-                    currentScale = _selectedUIElement.Transform.localScale.x;
+                    currentScale = _selectedElementPanel.Transform.localScale.x;
                 }
 
                 // Update scale UI
@@ -248,9 +271,9 @@ namespace UIBuddy.UI.Panel
 
                 // Get current rotation
                 float currentRotation = 0f;
-                if (_selectedUIElement.Transform != null)
+                if (_selectedElementPanel.Transform != null)
                 {
-                    currentRotation = _selectedUIElement.Transform.localEulerAngles.z;
+                    currentRotation = _selectedElementPanel.Transform.localEulerAngles.z;
                 }
 
                 // Update rotation UI
@@ -265,19 +288,19 @@ namespace UIBuddy.UI.Panel
 
         private void OnScaleSliderChanged(float value)
         {
-            if (_updatingUI || _selectedUIElement == null)
+            if (_updatingUI || _selectedElementPanel == null)
                 return;
 
             float scaleFactor = SliderValueToScaleFactor(value);
             _scaleInputField.text = scaleFactor.ToString("F2");
 
             // Apply the scale to the selected element
-            _selectedUIElement.ApplyScale(scaleFactor);
+            _selectedElementPanel.ApplyScale(scaleFactor);
         }
 
         private void OnScaleInputChanged(string value)
         {
-            if (_updatingUI || _selectedUIElement == null)
+            if (_updatingUI || _selectedElementPanel == null)
                 return;
 
             if (float.TryParse(value, out float scaleFactor))
@@ -289,25 +312,25 @@ namespace UIBuddy.UI.Panel
                 _scaleSlider.value = ScaleFactorToSliderValue(scaleFactor);
 
                 // Apply the scale to the selected element
-                _selectedUIElement.ApplyScale(scaleFactor);
+                _selectedElementPanel.ApplyScale(scaleFactor);
             }
         }
 
         private void OnRotationSliderChanged(float value)
         {
-            if (_updatingUI || _selectedUIElement == null || _selectedUIElement.Transform == null)
+            if (_updatingUI || _selectedElementPanel == null || _selectedElementPanel.Transform == null)
                 return;
 
             _rotationInputField.text = value.ToString("F1");
 
             // Apply rotation to the selected element
-            Vector3 eulerAngles = _selectedUIElement.Transform.localEulerAngles;
-            _selectedUIElement.Transform.localEulerAngles = new Vector3(eulerAngles.x, eulerAngles.y, value);
+            Vector3 eulerAngles = _selectedElementPanel.Transform.localEulerAngles;
+            _selectedElementPanel.Transform.localEulerAngles = new Vector3(eulerAngles.x, eulerAngles.y, value);
         }
 
         private void OnRotationInputChanged(string value)
         {
-            if (_updatingUI || _selectedUIElement == null || _selectedUIElement.Transform == null)
+            if (_updatingUI || _selectedElementPanel == null || _selectedElementPanel.Transform == null)
                 return;
 
             if (float.TryParse(value, out float rotationValue))
@@ -319,8 +342,8 @@ namespace UIBuddy.UI.Panel
                 _rotationSlider.value = rotationValue;
 
                 // Apply rotation to the selected element
-                Vector3 eulerAngles = _selectedUIElement.Transform.localEulerAngles;
-                _selectedUIElement.Transform.localEulerAngles = new Vector3(eulerAngles.x, eulerAngles.y, rotationValue);
+                Vector3 eulerAngles = _selectedElementPanel.Transform.localEulerAngles;
+                _selectedElementPanel.Transform.localEulerAngles = new Vector3(eulerAngles.x, eulerAngles.y, rotationValue);
             }
         }
 
@@ -360,14 +383,8 @@ namespace UIBuddy.UI.Panel
         public virtual void EnsureValidPosition()
         {
             // Prevent panel going outside screen bounds
-
             Vector2 pos = RootRect.anchoredPosition;
             Vector2 dimensions = ReferenceResolution;
-
-            var x = RootRect.anchorMax.x;
-            var y = RootRect.anchorMax.y;
-            var mx = RootRect.anchorMin.x;
-            var my = RootRect.anchorMin.y;
 
             float halfW = dimensions.x * 0.5f;
             float halfH = dimensions.y * 0.5f;
@@ -381,6 +398,11 @@ namespace UIBuddy.UI.Panel
             pos.y = Math.Clamp(pos.y, minPosY, maxPosY);
 
             RootRect.anchoredPosition = pos;
+        }
+
+        public void SelectPanel(bool select)
+        {
+            // ignore main panel
         }
     }
 }

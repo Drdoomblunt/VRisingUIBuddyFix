@@ -47,7 +47,7 @@ namespace UIBuddy
                 _updateBehavior.Setup();
 
                 _pm = new PanelManager();
-               // _pm.AddDrag("SLS logo");
+                _pm.AddDrag("SLS logo");
                // _pm.AddDrag(null);
 
                 Log.LogInfo("UIBuddy initialized successfully");

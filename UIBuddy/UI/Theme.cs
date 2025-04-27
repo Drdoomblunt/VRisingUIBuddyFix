@@ -21,6 +21,8 @@ namespace UIBuddy.UI
         public static Color InputFieldNormal { get; private set; }
         public static Color InputFieldHighlighted { get; private set; }
         public static Color InputFieldPressed { get; private set; }
+        public static Color ElementOutlineColor { get; private set; }
+
         public static float Opacity
         {
             get => _opacity;
@@ -35,7 +37,6 @@ namespace UIBuddy.UI
         {
             Opacity = 0.6f;
         }
-
 
         private static void UpdateColors()
         {
@@ -56,6 +57,7 @@ namespace UIBuddy.UI
             InputFieldNormal = new Color(1f, 1f, 1f, Opacity);
             InputFieldHighlighted = new Color(0.95f, 0.95f, 0.95f, Opacity);
             InputFieldPressed = new Color(0.78f, 0.78f, 0.78f, Opacity);
+            ElementOutlineColor = new Color(1f, 1f, 0f, Opacity);
         }
     }
 }

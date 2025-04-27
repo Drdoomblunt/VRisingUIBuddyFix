@@ -16,6 +16,7 @@ public class UIElementDragEx: IUIElementDrag
     // Common
     private Vector2 _initialMousePos;
     private Vector2 _initialValue;
+
     public IGenericPanel Panel { get; }
 
     // Dragging

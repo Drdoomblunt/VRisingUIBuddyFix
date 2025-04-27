@@ -64,6 +64,63 @@ namespace UIBuddy.UI
             };
         }
 
+        /// <summary>
+        /// Create a Toggle control component.
+        /// </summary>
+        /// <param name="parent">The parent object to build onto</param>
+        /// <param name="name">The GameObject name of your toggle</param>
+        /// <param name="bgColor">The background color of the checkbox</param>
+        /// <param name="checkWidth">The width of your checkbox</param>
+        /// <param name="checkHeight">The height of your checkbox</param>
+        /// <returns>ToggleRef</returns>
+        public static ToggleRef CreateToggle(GameObject parent, string name, Color bgColor = default,
+            int checkWidth = 20, int checkHeight = 20)
+        {
+            var result = new ToggleRef();
+            // Main obj
+            result.GameObject = CreateUIObject(name, parent, SmallElementSize);
+            SetLayoutGroup<HorizontalLayoutGroup>(result.GameObject, false, false, true, true, 5, 0, 0, 0, 0, childAlignment: TextAnchor.MiddleLeft);
+            result.Toggle = result.GameObject.AddComponent<Toggle>();
+            result.Toggle.isOn = true;
+            SetDefaultSelectableValues(result.Toggle);
+            // need a second reference so we can use it inside the lambda, since 'toggle' is an out var.
+            var t2 = result.Toggle;
+            result.Toggle.onValueChanged.AddListener(_ => { t2.OnDeselect(null); });
+            result.Toggle.onValueChanged.AddListener(value => result.OnValueChanged?.Invoke(value));
+
+            // Check mark background
+
+            var checkBgObj = CreateUIObject("Background", result.GameObject);
+            var bgImage = checkBgObj.AddComponent<Image>();
+            bgImage.color = bgColor == default ? Theme.ToggleNormal : bgColor;
+
+            SetLayoutGroup<HorizontalLayoutGroup>(checkBgObj, true, true, true, true, 0, 2, 2, 2, 2);
+            SetLayoutElement(checkBgObj, minWidth: checkWidth, flexibleWidth: 0, minHeight: checkHeight, flexibleHeight: 0);
+
+            // Check mark image
+
+            GameObject checkMarkObj = CreateUIObject("Checkmark", checkBgObj);
+            Image checkImage = checkMarkObj.AddComponent<Image>();
+            checkImage.color = Theme.ToggleCheckMark;
+
+            // Label 
+
+            GameObject labelObj = CreateUIObject("Label", result.GameObject);
+            result.Text = labelObj.AddComponent<TextMeshProUGUI>();
+            result.Text.text = "";
+            result.Text.alignment = TextAlignmentOptions.MidlineLeft;
+            SetDefaultTextValues(result.Text);
+
+            SetLayoutElement(labelObj, minWidth: 0, flexibleWidth: 0, minHeight: checkHeight, flexibleHeight: 0);
+
+            // References
+
+            result.Toggle.graphic = checkImage;
+            result.Toggle.targetGraphic = bgImage;
+
+            return result;
+        }
+
         public static InputFieldRef CreateInputField(GameObject parent, string name, string placeHolderText, int charLimit = 255)
         {
             GameObject mainObj = CreateUIObject(name, parent);

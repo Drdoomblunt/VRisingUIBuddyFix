@@ -2,11 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using HarmonyLib;
+using TMPro;
 using UIBuddy.Classes;
 using UIBuddy.Classes.Behaviors;
 using UIBuddy.UI.Panel;
 using UnityEngine;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace UIBuddy.UI;
 
@@ -105,19 +107,33 @@ public class ElementPanel: IGenericPanel
                 Outline.LineWidth = 2f; // Adjust as needed
                 Outline.SetActive(false);
 
-                /*Outline = CustomUIObject.AddComponent<Outline>();
-                if (Outline != null)
-                {
-                    Outline.effectColor = Theme.ElementOutlineColor;
-                    Outline.effectDistance = new Vector2(3, 3);
-                    Outline.enabled = false;
-                }
-                else
-                {
-                    Plugin.Log.LogWarning($"Failed to create Outline component for {Name}");
-                }*/
-                var label = UIFactory.CreateLabel(CustomUIObject, "NameLabel", Name, fontSize: 20);
-                UIFactory.SetLayoutElement(label.GameObject, flexibleWidth: 9999, minWidth: 50);
+                // Create a layout container for the label to ensure proper horizontal display
+                var labelContainer = UIFactory.CreateHorizontalGroup(
+                    CustomUIObject,
+                    "LabelContainer",
+                    forceExpandWidth: true,
+                    forceExpandHeight: false,
+                    childControlWidth: true,
+                    childControlHeight: true,
+                    spacing: 5,
+                    padding: new Vector4(5, 5, 5, 5));
+
+                // Create the label
+                var label = UIFactory.CreateLabel(labelContainer, "NameLabel", Name,
+                    alignment: TextAlignmentOptions.Left,
+                    fontSize: 16);
+
+                // Ensure the label gets appropriate layout settings
+                UIFactory.SetLayoutElement(label.GameObject,
+                    minWidth: 50,
+                    flexibleWidth: 1,
+                    minHeight: 25,
+                    preferredHeight: 25);
+
+                var toggleRef = UIFactory.CreateToggle(CustomUIObject, "EnableCheck");
+                toggleRef.OnValueChanged += value => { RootObject.SetActive(value); };
+                toggleRef.Toggle.isOn = true; // Default value
+                toggleRef.Text.text = "Enable this panel";
             }
         }
         catch (Exception ex)
@@ -210,6 +226,19 @@ public class ElementPanel: IGenericPanel
 
     public void SelectPanel(bool select)
     {
+        if (Outline == null) return;
         Outline.SetActive(select);
+    }
+
+    public void SetActive(bool value)
+    {
+        CustomUIObject.SetActive(value);
+        if (!value)
+            PanelManager.DeselectPanels();
+    }
+
+    public void Dispose()
+    {
+        Object.Destroy(CustomUIObject);
     }
 }

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UIBuddy.Classes;
+using Object = UnityEngine.Object;
 
 namespace UIBuddy.UI.Panel
 {
@@ -95,11 +96,35 @@ namespace UIBuddy.UI.Panel
             CreateNameRow(contentArea);
             CreateScaleRow(contentArea);
             CreateRotationRow(contentArea);
+            CreateCheckRow(contentArea);
 
             // Create the dragger that uses the title bar for dragging
             Dragger = new UIElementDragEx(_titleBar, this);
 
             CoroutineUtility.StartCoroutine(LateSetupCoroutine());
+        }
+
+        private void CreateCheckRow(GameObject parent)
+        {
+            var row = UIFactory.CreateHorizontalGroup(parent, "NameRow",
+                forceExpandWidth: false,
+                forceExpandHeight: false,
+                childControlWidth: true,
+                childControlHeight: true,
+                spacing: 10,
+                new Vector4(5, 5, 5, 5));
+
+            UIFactory.SetLayoutElement(row, minHeight: 30, preferredHeight: 30);
+
+            var toggleRef = UIFactory.CreateToggle(row, "EnableCheck");
+            toggleRef.OnValueChanged += ToggleAllEnabled;
+            toggleRef.Toggle.isOn = true; // Default value
+            toggleRef.Text.text = "Show Panels";
+        }
+
+        private void ToggleAllEnabled(bool value)
+        {
+            PanelManager.SetPanelsActive(value);
         }
 
         private IEnumerator LateSetupCoroutine()
@@ -403,6 +428,16 @@ namespace UIBuddy.UI.Panel
         public void SelectPanel(bool select)
         {
             // ignore main panel
+        }
+
+        public void SetActive(bool value)
+        {
+            RootObject.SetActive(value);
+        }
+
+        public void Dispose()
+        {
+            Object.Destroy(RootObject);
         }
     }
 }

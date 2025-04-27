@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UIBuddy.UI;
 using UIBuddy.UI.Classes;
 using UIBuddy.UI.Panel;
@@ -141,6 +142,8 @@ namespace UIBuddy.Classes
 
         public void Dispose()
         {
+            foreach (var panel in _draggers.Select(a=> a.Panel))
+                panel.Dispose();
             _draggers.Clear();
         }
 
@@ -153,6 +156,22 @@ namespace UIBuddy.Classes
                 drag.Panel.SelectPanel(false);
             panel.SelectPanel(true);
             MainPanel.SelectedElementPanel = panel as ElementPanel;
+        }
+
+        public static void SetPanelsActive(bool value)
+        {
+            foreach (var drag in _draggers.Where(drag => drag.Panel != MainPanel))
+            {
+                drag.Panel.SetActive(value);
+            }
+        }
+
+        public static void DeselectPanels()
+        {
+            foreach (var drag in _draggers)
+            {
+                drag.Panel.SetActive(false);
+            }
         }
     }
 }

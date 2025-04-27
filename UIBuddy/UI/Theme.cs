@@ -22,6 +22,8 @@ namespace UIBuddy.UI
         public static Color InputFieldHighlighted { get; private set; }
         public static Color InputFieldPressed { get; private set; }
         public static Color ElementOutlineColor { get; private set; }
+        public static Color ToggleNormal { get; private set; }
+        public static Color ToggleCheckMark { get; private set; }
 
         public static float Opacity
         {
@@ -37,6 +39,7 @@ namespace UIBuddy.UI
         {
             Opacity = 0.8f;
         }
+
 
         private static void UpdateColors()
         {
@@ -58,6 +61,8 @@ namespace UIBuddy.UI
             InputFieldHighlighted = new Color(0.95f, 0.95f, 0.95f, Opacity);
             InputFieldPressed = new Color(0.78f, 0.78f, 0.78f, Opacity);
             ElementOutlineColor = new Color(1f, 1f, 0f, Opacity);
+            ToggleNormal =  new Color(0f, 0f, 0f, Opacity);
+            ToggleCheckMark = new Color(0.6f, 0.7f, 0.6f, Opacity);
         }
     }
 }

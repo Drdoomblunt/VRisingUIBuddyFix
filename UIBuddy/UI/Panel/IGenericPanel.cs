@@ -9,5 +9,7 @@ namespace UIBuddy.UI.Panel
         float GetOwnerScaleFactor();
         void EnsureValidPosition();
         void SelectPanel(bool select);
+        void SetActive(bool value);
+        void Dispose();
     }
 }

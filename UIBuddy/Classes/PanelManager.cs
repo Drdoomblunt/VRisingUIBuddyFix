@@ -23,7 +23,7 @@ namespace UIBuddy.Classes
         public static Canvas Canvas { get; set; }
         public static GameObject PanelHolder { get; private set; }
         // Main control panel
-        public MainControlPanel MainPanel { get; private set; }
+        public static  MainControlPanel MainPanel { get; private set; }
 
         public PanelManager()
         {
@@ -135,7 +135,7 @@ namespace UIBuddy.Classes
             if (MainPanel != null && !string.IsNullOrEmpty(gameObjectName)
                 && MainPanel.SelectedElementPanel == null)
             {
-                MainPanel.SelectedElementPanel = element;
+                SelectPanel(element);
             }
         }
 
@@ -146,9 +146,13 @@ namespace UIBuddy.Classes
 
         public static void SelectPanel(IGenericPanel panel)
         {
+            if(panel == MainPanel)
+                return;
+
             foreach (var drag in _draggers)
                 drag.Panel.SelectPanel(false);
             panel.SelectPanel(true);
+            MainPanel.SelectedElementPanel = panel as ElementPanel;
         }
     }
 }

@@ -4,7 +4,9 @@ using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
+using Il2CppInterop.Runtime.Injection;
 using UIBuddy.Classes;
+using UIBuddy.Classes.Behaviors;
 using UIBuddy.UI;
 
 namespace UIBuddy
@@ -27,7 +29,7 @@ namespace UIBuddy
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
 
-            var t = new Timer(22000) { AutoReset = false};
+            var t = new Timer(24000) { AutoReset = false};
             t.Elapsed += T_Elapsed;
             t.Start();
         }
@@ -41,14 +43,21 @@ namespace UIBuddy
         {
             try
             {
+                if (Plugin.IsInitialized) return;
+                IsInitialized = true;
+
                 Log.LogInfo("Initializing UIBuddy...");
                 EnsureThemeInitialized();
+                ClassInjector.RegisterTypeInIl2Cpp<RectOutline>();
                 _updateBehavior = new CoreUpdateBehavior();
                 _updateBehavior.Setup();
 
                 _pm = new PanelManager();
                 _pm.AddDrag("SLS logo");
-               // _pm.AddDrag(null);
+                _pm.AddDrag("NewsPanelParent");
+                _pm.AddDrag("SideBar");
+                _pm.AddDrag("LinksParentNode");
+                // _pm.AddDrag(null);
 
                 Log.LogInfo("UIBuddy initialized successfully");
             }

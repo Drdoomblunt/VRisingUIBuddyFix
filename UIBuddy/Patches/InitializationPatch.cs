@@ -4,6 +4,7 @@ using ProjectM.UI;
 using System;
 using TMPro;
 using UIBuddy.UI;
+using UnityEngine;
 
 namespace UIBuddy.Patches;
 
@@ -47,5 +48,15 @@ public static class InitializationPatch
             UIFactory.Font = tmp.font;
             UIFactory.FontMaterial = tmp.fontMaterial;
         }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(MainMenuView), nameof(MainMenuView.Awake))]
+    public static void mmm()
+    {
+        if (Plugin.IsInitialized) return;
+        if(GameObject.Find("SideBar") == null) return;
+        Plugin.Log.LogInfo("Creating Controls");
+        Plugin.UIOnInitialize();
     }
 }

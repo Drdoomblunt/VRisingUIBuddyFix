@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using HarmonyLib;
+using UIBuddy.Classes;
+using UIBuddy.Classes.Behaviors;
 using UIBuddy.UI.Panel;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,7 +26,7 @@ public class ElementPanel: IGenericPanel
     public RectTransform CustomUIRect { get; set; }
     public GameObject CustomUIObject { get; set; }
     public UIElementDragEx Dragger { get; protected set; }
-    protected Outline Outline { get; set; }
+    protected RectOutline Outline { get; set; }
 
     // Track the original scale to allow proper reset
     private float _originalScaleFactor;
@@ -82,15 +86,45 @@ public class ElementPanel: IGenericPanel
         //var titleBar = UIFactory.CreateUIObject("ContentHolder", CustomUIObject);
         //UIFactory.CreateLabel(titleBar, "NameLabel", Name, fontSize: 20);
 
-        Outline = CustomUIObject.AddComponent<Outline>();
-        Outline.effectColor = Theme.ElementOutlineColor;
-        Outline.enabled = false;
-
+        CoroutineUtility.StartCoroutine(SafeCreateContent());
         // Activate the UI
         CustomUIObject.SetActive(true);
     }
 
+    private IEnumerator SafeCreateContent()
+    {
+        // Wait for a frame to ensure GameObject is fully initialized
+        yield return null;
 
+        try
+        {
+            if (CustomUIObject != null)
+            {
+                Outline = CustomUIObject.AddComponent<RectOutline>();
+                Outline.OutlineColor = Theme.ElementOutlineColor;
+                Outline.LineWidth = 2f; // Adjust as needed
+                Outline.SetActive(false);
+
+                /*Outline = CustomUIObject.AddComponent<Outline>();
+                if (Outline != null)
+                {
+                    Outline.effectColor = Theme.ElementOutlineColor;
+                    Outline.effectDistance = new Vector2(3, 3);
+                    Outline.enabled = false;
+                }
+                else
+                {
+                    Plugin.Log.LogWarning($"Failed to create Outline component for {Name}");
+                }*/
+                var label = UIFactory.CreateLabel(CustomUIObject, "NameLabel", Name, fontSize: 20);
+                UIFactory.SetLayoutElement(label.GameObject, flexibleWidth: 9999, minWidth: 50);
+            }
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogError($"Error in SafeCreateContent for {Name}: {ex.Message}");
+        }
+    }
 
     private void OnScaleChanged(float value)
     {
@@ -176,6 +210,6 @@ public class ElementPanel: IGenericPanel
 
     public void SelectPanel(bool select)
     {
-        Outline.enabled = select;
+        Outline.SetActive(select);
     }
 }

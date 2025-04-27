@@ -35,7 +35,7 @@ namespace UIBuddy.UI
 
         static Theme()
         {
-            Opacity = 0.6f;
+            Opacity = 0.8f;
         }
 
         private static void UpdateColors()

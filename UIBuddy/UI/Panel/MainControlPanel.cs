@@ -228,7 +228,7 @@ namespace UIBuddy.UI.Panel
             var inputRef = UIFactory.CreateInputField(rotationRow, "RotationInput", "");
             _rotationInputField = inputRef.Component;
             inputRef.OnValueChanged += OnRotationInputChanged;
-            UIFactory.SetLayoutElement(inputRef.Component.gameObject, minWidth: 60, preferredWidth: 60);
+            UIFactory.SetLayoutElement(inputRef.Component.gameObject, minWidth: 60, preferredWidth: 60, minHeight: 35, preferredHeight: 35);
         }
 
         private void UpdateUIForSelectedElement()

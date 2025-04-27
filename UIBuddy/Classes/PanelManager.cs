@@ -168,7 +168,7 @@ namespace UIBuddy.Classes
 
         public static void DeselectPanels()
         {
-            foreach (var drag in _draggers)
+            foreach (var drag in _draggers.Where(drag => drag.Panel != MainPanel))
             {
                 drag.Panel.SetActive(false);
             }

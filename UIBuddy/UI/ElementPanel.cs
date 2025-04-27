@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using HarmonyLib;
+using MS.Internal.Xml.XPath;
 using TMPro;
 using UIBuddy.Classes;
 using UIBuddy.Classes.Behaviors;
@@ -103,42 +104,90 @@ public class ElementPanel: IGenericPanel
             if (CustomUIObject != null)
             {
                 Outline = CustomUIObject.AddComponent<RectOutline>();
-                Outline.OutlineColor = Theme.ElementOutlineColor;
-                Outline.LineWidth = 2f; // Adjust as needed
-                Outline.SetActive(false);
+                if (Outline != null)
+                {
+                    Outline.OutlineColor = Theme.ElementOutlineColor;
+                    Outline.LineWidth = 2f; // Adjust as needed
+                    Outline.SetActive(false);
+                }
 
-                // Create a layout container for the label to ensure proper horizontal display
-                var labelContainer = UIFactory.CreateHorizontalGroup(
-                    CustomUIObject,
-                    "LabelContainer",
-                    forceExpandWidth: true,
-                    forceExpandHeight: false,
-                    childControlWidth: true,
-                    childControlHeight: true,
-                    spacing: 5,
-                    padding: new Vector4(5, 5, 5, 5));
+                // Create a header container at the top of the panel
+                var headerContainer = UIFactory.CreateUIObject("HeaderContainer", CustomUIObject);
+                if (headerContainer != null)
+                {
+                    var headerRect = headerContainer.GetComponent<RectTransform>();
+                    if (headerRect != null)
+                    {
+                        headerRect.anchorMin = new Vector2(0, 1);
+                        headerRect.anchorMax = new Vector2(1, 1);
+                        headerRect.pivot = new Vector2(0.5f, 1);
+                        headerRect.sizeDelta = new Vector2(0, 30); // Fixed height
+                        headerRect.anchoredPosition = Vector2.zero;
+                    }
 
-                // Create the label
-                var label = UIFactory.CreateLabel(labelContainer, "NameLabel", Name,
-                    alignment: TextAlignmentOptions.Left,
-                    fontSize: 16);
+                    // Create the label with maximum width
+                    var label = UIFactory.CreateLabel(headerContainer, "NameLabel", Name,
+                        alignment: TextAlignmentOptions.Left,
+                        fontSize: 16);
 
-                // Ensure the label gets appropriate layout settings
-                UIFactory.SetLayoutElement(label.GameObject,
-                    minWidth: 50,
-                    flexibleWidth: 1,
-                    minHeight: 25,
-                    preferredHeight: 25);
+                    if (label != null && label.GameObject != null)
+                    {
+                        // Make the label take most of the width
+                        var labelRect = label.GameObject.GetComponent<RectTransform>();
+                        if (labelRect != null)
+                        {
+                            labelRect.anchorMin = new Vector2(0, 0);
+                            labelRect.anchorMax = new Vector2(0.9f, 1);
+                            labelRect.pivot = new Vector2(0, 0.5f);
+                            labelRect.anchoredPosition = new Vector2(10, 0);
+                            labelRect.sizeDelta = Vector2.zero;
+                        }
+                    }
 
-                var toggleRef = UIFactory.CreateToggle(CustomUIObject, "EnableCheck");
-                toggleRef.OnValueChanged += value => { RootObject.SetActive(value); };
-                toggleRef.Toggle.isOn = true; // Default value
-                toggleRef.Text.text = "Enable this panel";
+                    // Create toggle in top-right corner using UIFactory
+                    var toggleContainer = UIFactory.CreateUIObject("ToggleContainer", headerContainer);
+                    if (toggleContainer != null)
+                    {
+                        var toggleContainerRect = toggleContainer.GetComponent<RectTransform>();
+                        if (toggleContainerRect != null)
+                        {
+                            toggleContainerRect.anchorMin = new Vector2(0.9f, 0);
+                            toggleContainerRect.anchorMax = new Vector2(1, 1);
+                            toggleContainerRect.pivot = new Vector2(1, 0.5f);
+                            toggleContainerRect.anchoredPosition = new Vector2(-10, 0);
+                            toggleContainerRect.sizeDelta = Vector2.zero;
+                        }
+
+                        // Use UIFactory to create the toggle
+                        var toggleRef = UIFactory.CreateToggle(toggleContainer, "EnableToggle");
+                        if (toggleRef != null)
+                        {
+                            // Hide the text
+                            if (toggleRef.Text != null)
+                            {
+                                toggleRef.Text.text = "";
+                            }
+
+                            // Set the value change handler
+                            toggleRef.OnValueChanged += value =>
+                            {
+                                if (RootObject != null)
+                                    RootObject.SetActive(value);
+                            };
+
+                            if (toggleRef.Toggle != null)
+                            {
+                                toggleRef.Toggle.isOn = true; // Default value
+                            }
+                        }
+                    }
+                }
             }
         }
         catch (Exception ex)
         {
-            Plugin.Log.LogError($"Error in SafeCreateContent for {Name}: {ex.Message}");
+            if (Plugin.Log != null)
+                Plugin.Log.LogError($"Error in SafeCreateContent for {Name}: {ex.Message}");
         }
     }
 
@@ -228,6 +277,9 @@ public class ElementPanel: IGenericPanel
     {
         if (Outline == null) return;
         Outline.SetActive(select);
+        if (select)
+            RootObject.transform.SetAsLastSibling();
+
     }
 
     public void SetActive(bool value)

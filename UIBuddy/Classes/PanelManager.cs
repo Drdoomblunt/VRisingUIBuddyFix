@@ -106,15 +106,21 @@ namespace UIBuddy.Classes
             _previousMousePosition = mousePos;
             _previousMouseButtonState = state;
 
-            foreach (var instance in _draggers)
+            //update main panel
+            if (MainPanel is { IsActive: true } && MainPanel.Dragger.IsActive)
             {
-                if (!instance.IsActive)
-                    continue;
+                MainPanel.Dragger.Update(state, mousePos);
+            }
 
-                instance.Update(state, mousePos);
+            if (!DraggerHandledThisFrame)
+            {
+                foreach (var instance in _draggers.Where(instance => instance.IsActive))
+                {
+                    instance.Update(state, mousePos);
 
-                if (DraggerHandledThisFrame)
-                    break;
+                    if (DraggerHandledThisFrame)
+                        break;
+                }
             }
 
             if (WasAnyDragging && state.HasFlag(MouseState.ButtonState.Up))
@@ -153,8 +159,8 @@ namespace UIBuddy.Classes
                 return;
 
             foreach (var drag in _draggers)
-                drag.Panel.SelectPanel(false);
-            panel.SelectPanel(true);
+                drag.Panel.SelectPanelAsCurrentlyActive(false);
+            panel.SelectPanelAsCurrentlyActive(true);
             MainPanel.SelectedElementPanel = panel as ElementPanel;
         }
 
@@ -170,8 +176,14 @@ namespace UIBuddy.Classes
         {
             foreach (var drag in _draggers.Where(drag => drag.Panel != MainPanel))
             {
-                drag.Panel.SetActive(false);
+                drag.Panel.SetActiveUnconditionally(false);
             }
         }
+
+        public static List<IGenericPanel> GetAllPanels()
+        {
+            return _draggers.Where(drag => drag.Panel != MainPanel).Select(a => a.Panel).ToList();
+        }
+
     }
 }

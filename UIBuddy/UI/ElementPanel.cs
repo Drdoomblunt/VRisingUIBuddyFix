@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using HarmonyLib;
-using MS.Internal.Xml.XPath;
 using TMPro;
 using UIBuddy.Classes;
 using UIBuddy.Classes.Behaviors;
@@ -13,31 +11,25 @@ using Object = UnityEngine.Object;
 
 namespace UIBuddy.UI;
 
-public class ElementPanel: IGenericPanel
+public class ElementPanel: GenericPanelBase
 {
-    public RectTransform Rect;
-    public readonly string Name;
     public bool CanDrag => true;
     public bool IsPinned => false;
 
-    public Canvas OwnerCanvas { get; private set; }
     public CanvasScaler OwnerCanvasScaler { get; private set; }
     public Transform Transform { get; set; }
-    public GameObject RootObject { get; }
-    public Vector2 ReferenceResolution { get; set; }
 
-    public RectTransform CustomUIRect { get; set; }
-    public GameObject CustomUIObject { get; set; }
+    private RectTransform CustomUIRect { get; set; }
+    private GameObject CustomUIObject { get; set; }
     public UIElementDragEx Dragger { get; protected set; }
-    protected RectOutline Outline { get; set; }
+    private RectOutline Outline { get; set; }
 
     // Track the original scale to allow proper reset
     private float _originalScaleFactor;
 
     public ElementPanel(string gameObjectName)
+        : base(gameObjectName)
     {
-        Name = gameObjectName;
-        RootObject = GameObject.Find(gameObjectName);
     }
 
     public bool Initialize()
@@ -48,13 +40,7 @@ public class ElementPanel: IGenericPanel
             return false;
         }
 
-        Rect = RootObject.GetComponent<RectTransform>();
-        OwnerCanvas = RootObject.GetComponentInParent<Canvas>();
         OwnerCanvasScaler = RootObject.GetComponent<CanvasScaler>();
-
-        ReferenceResolution = OwnerCanvasScaler?.referenceResolution ??
-                              RootObject.GetComponentInParent<CanvasScaler>()?.referenceResolution ?? 
-                              Vector2.one;
 
         if (OwnerCanvasScaler != null)
             _originalScaleFactor = OwnerCanvasScaler.scaleFactor;
@@ -69,7 +55,7 @@ public class ElementPanel: IGenericPanel
         return true;
     }
 
-    protected virtual void ConstructUI()
+    protected override void ConstructUI()
     {
         // Get or add RectTransform
         CustomUIObject = UIFactory.CreateUIObject($"MarkPanel_{Name}", RootObject);
@@ -86,12 +72,8 @@ public class ElementPanel: IGenericPanel
         bgImage.type = Image.Type.Sliced;
         bgImage.color = Theme.PanelBackground;
 
-        //var titleBar = UIFactory.CreateUIObject("ContentHolder", CustomUIObject);
-        //UIFactory.CreateLabel(titleBar, "NameLabel", Name, fontSize: 20);
-
         CoroutineUtility.StartCoroutine(SafeCreateContent());
-        // Activate the UI
-        CustomUIObject.SetActive(true);
+
     }
 
     private IEnumerator SafeCreateContent()
@@ -182,6 +164,8 @@ public class ElementPanel: IGenericPanel
                         }
                     }
                 }
+                // Activate the UI
+                CustomUIObject.SetActive(true);
             }
         }
         catch (Exception ex)
@@ -189,11 +173,6 @@ public class ElementPanel: IGenericPanel
             if (Plugin.Log != null)
                 Plugin.Log.LogError($"Error in SafeCreateContent for {Name}: {ex.Message}");
         }
-    }
-
-    private void OnScaleChanged(float value)
-    {
-        ApplyScale(value);
     }
 
     public void ApplyScale(float value)
@@ -242,54 +221,31 @@ public class ElementPanel: IGenericPanel
         ApplyScale(_originalScaleFactor);
     }
 
-    public float GetOwnerScaleFactor()
+    public override void SelectPanelAsCurrentlyActive(bool select)
     {
-        return OwnerCanvas.scaleFactor;
-    }
-
-    public virtual void EnsureValidPosition()
-    {
-        // Prevent panel going outside screen bounds
-
-        Vector2 pos = Rect.anchoredPosition;
-        Vector2 dimensions = ReferenceResolution;
-
-        var x = Rect.anchorMax.x;
-        var y = Rect.anchorMax.y;
-        var mx = Rect.anchorMin.x;
-        var my = Rect.anchorMin.y;
-
-        float halfW = dimensions.x * 0.5f;
-        float halfH = dimensions.y * 0.5f;
-
-        float minPosX = -halfW + Rect.rect.width * 0.5f;
-        float maxPosX = halfW - Rect.rect.width * 0.5f;
-        float minPosY = -halfH + Rect.rect.height * 0.5f;
-        float maxPosY = halfH - Rect.rect.height * 0.5f;
-
-        pos.x = Math.Clamp(pos.x, minPosX, maxPosX);
-        pos.y = Math.Clamp(pos.y, minPosY, maxPosY);
-  
-        Rect.anchoredPosition = pos;
-    }
-
-    public void SelectPanel(bool select)
-    {
-        if (Outline == null) return;
+        if (Outline == null || !RootObject.activeSelf) return;
         Outline.SetActive(select);
         if (select)
             RootObject.transform.SetAsLastSibling();
 
     }
 
-    public void SetActive(bool value)
+    public override void SetActive(bool value)
     {
+        if(!RootObject.activeSelf) return;
+
         CustomUIObject.SetActive(value);
         if (!value)
             PanelManager.DeselectPanels();
     }
 
-    public void Dispose()
+    public override void SetActiveUnconditionally(bool value)
+    {
+        if (!RootObject.activeSelf) return;
+        CustomUIObject.SetActive(value);
+    }
+
+    public override void Dispose()
     {
         Object.Destroy(CustomUIObject);
     }

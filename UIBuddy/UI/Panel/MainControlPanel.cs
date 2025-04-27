@@ -4,11 +4,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UIBuddy.Classes;
-using Object = UnityEngine.Object;
 
 namespace UIBuddy.UI.Panel
 {
-    public class MainControlPanel : IGenericPanel
+    public class MainControlPanel : GenericPanelBase
     {
         // UI Components
         private TextMeshProUGUI _nameValueText;
@@ -20,18 +19,8 @@ namespace UIBuddy.UI.Panel
         private ElementPanel _selectedElementPanel;
         private bool _updatingUI = false;
         private GameObject _titleBar;
-        private readonly Canvas _ownerCanvas;
-        public Vector2 ReferenceResolution { get; set; }
-
-        public RectTransform RootRect { get; set; }
-        public GameObject RootObject { get; set; }
 
         public UIElementDragEx Dragger { get; protected set; }
-
-        public float GetOwnerScaleFactor()
-        {
-            return _ownerCanvas.scaleFactor;
-        }
 
         // Properties
         public ElementPanel SelectedElementPanel
@@ -46,20 +35,16 @@ namespace UIBuddy.UI.Panel
 
         // Constructor
         public MainControlPanel(GameObject parent)
+            : base(parent, nameof(MainControlPanel))
         {
-            RootObject = UIFactory.CreateUIObject($"MarkPanel_{Guid.NewGuid()}", parent);
-
-            _ownerCanvas = RootObject.GetComponentInParent<Canvas>();
-            ReferenceResolution = RootObject.GetComponentInParent<CanvasScaler>()?.referenceResolution ?? Vector2.one;
-
             ConstructUI();
         }
 
-        protected void ConstructUI()
+
+        #region UI CREATION
+        protected override void ConstructUI()
         {
             RootObject.SetActive(false);
-
-            RootRect = RootObject.GetComponent<RectTransform>();
 
             // Set size for the main panel
             RootRect.sizeDelta = new Vector2(300, 200);
@@ -102,29 +87,6 @@ namespace UIBuddy.UI.Panel
             Dragger = new UIElementDragEx(_titleBar, this);
 
             CoroutineUtility.StartCoroutine(LateSetupCoroutine());
-        }
-
-        private void CreateCheckRow(GameObject parent)
-        {
-            var row = UIFactory.CreateHorizontalGroup(parent, "NameRow",
-                forceExpandWidth: false,
-                forceExpandHeight: false,
-                childControlWidth: true,
-                childControlHeight: true,
-                spacing: 10,
-                new Vector4(5, 5, 5, 5));
-
-            UIFactory.SetLayoutElement(row, minHeight: 30, preferredHeight: 30);
-
-            var toggleRef = UIFactory.CreateToggle(row, "EnableCheck");
-            toggleRef.OnValueChanged += ToggleAllEnabled;
-            toggleRef.Toggle.isOn = true; // Default value
-            toggleRef.Text.text = "Show Panels";
-        }
-
-        private void ToggleAllEnabled(bool value)
-        {
-            PanelManager.SetPanelsActive(value);
         }
 
         private IEnumerator LateSetupCoroutine()
@@ -256,6 +218,24 @@ namespace UIBuddy.UI.Panel
             UIFactory.SetLayoutElement(inputRef.Component.gameObject, minWidth: 60, preferredWidth: 60, minHeight: 35, preferredHeight: 35);
         }
 
+        private void CreateCheckRow(GameObject parent)
+        {
+            var row = UIFactory.CreateHorizontalGroup(parent, "NameRow",
+                forceExpandWidth: false,
+                forceExpandHeight: false,
+                childControlWidth: true,
+                childControlHeight: true,
+                spacing: 10,
+                new Vector4(5, 5, 5, 5));
+
+            UIFactory.SetLayoutElement(row, minHeight: 30, preferredHeight: 30);
+
+            var toggleRef = UIFactory.CreateToggle(row, "EnableCheck");
+            toggleRef.OnValueChanged += ToggleAllEnabled;
+            toggleRef.Toggle.isOn = true; // Default value
+            toggleRef.Text.text = "Show Panels";
+        }
+
         private void UpdateUIForSelectedElement()
         {
             if (_nameValueText == null)
@@ -372,6 +352,11 @@ namespace UIBuddy.UI.Panel
             }
         }
 
+        private void ToggleAllEnabled(bool value)
+        {
+            PanelManager.SetPanelsActive(value);
+        }
+
         // Helper methods for scale conversion
         private float SliderValueToScaleFactor(float sliderValue)
         {
@@ -405,39 +390,6 @@ namespace UIBuddy.UI.Panel
             }
         }
 
-        public virtual void EnsureValidPosition()
-        {
-            // Prevent panel going outside screen bounds
-            Vector2 pos = RootRect.anchoredPosition;
-            Vector2 dimensions = ReferenceResolution;
-
-            float halfW = dimensions.x * 0.5f;
-            float halfH = dimensions.y * 0.5f;
-
-            float minPosX = -halfW + RootRect.rect.width * 0.5f;
-            float maxPosX = halfW - RootRect.rect.width * 0.5f;
-            float minPosY = -halfH + RootRect.rect.height * 0.5f;
-            float maxPosY = halfH - RootRect.rect.height * 0.5f;
-
-            pos.x = Math.Clamp(pos.x, minPosX, maxPosX);
-            pos.y = Math.Clamp(pos.y, minPosY, maxPosY);
-
-            RootRect.anchoredPosition = pos;
-        }
-
-        public void SelectPanel(bool select)
-        {
-            // ignore main panel
-        }
-
-        public void SetActive(bool value)
-        {
-            RootObject.SetActive(value);
-        }
-
-        public void Dispose()
-        {
-            Object.Destroy(RootObject);
-        }
+        #endregion
     }
 }

@@ -24,6 +24,11 @@ namespace UIBuddy.UI
         public static Color ElementOutlineColor { get; private set; }
         public static Color ToggleNormal { get; private set; }
         public static Color ToggleCheckMark { get; private set; }
+        public static Color ViewportBackground { get; private set; }
+        public static Color ScrollbarNormal { get; private set; }
+        public static Color ScrollbarHighlighted { get; private set; }
+        public static Color ScrollbarPressed { get; private set; }
+        public static Color ScrollbarDisabled { get; private set; }
 
         public static float Opacity
         {
@@ -39,6 +44,8 @@ namespace UIBuddy.UI
         {
             Opacity = 0.8f;
         }
+
+        public static Color Level1 { get; set; }
 
 
         private static void UpdateColors()
@@ -63,6 +70,11 @@ namespace UIBuddy.UI
             ElementOutlineColor = new Color(1f, 1f, 0f, Opacity);
             ToggleNormal =  new Color(0f, 0f, 0f, Opacity);
             ToggleCheckMark = new Color(0.6f, 0.7f, 0.6f, Opacity);
+            ViewportBackground = new Color(0.07f, 0.07f, 0.07f, Opacity);
+            ScrollbarNormal = new(0.4f, 0.4f, 0.4f, Opacity);
+            ScrollbarHighlighted = new(0.5f, 0.5f, 0.5f, Opacity);
+            ScrollbarPressed = new(0.3f, 0.3f, 0.3f, Opacity);
+            ScrollbarDisabled = new(0.5f, 0.5f, 0.5f, Opacity);
         }
     }
 }

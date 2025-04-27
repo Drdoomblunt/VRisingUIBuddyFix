@@ -1,10 +1,9 @@
 ﻿using System;
 using UIBuddy.Classes;
 using UnityEngine;
-using UIBuddy.UI.Classes;
 using UIBuddy.UI.Panel;
 
-namespace UIBuddy.UI;
+namespace UIBuddy.UI.Classes;
 
 public class UIElementDragEx: IUIElementDrag
 {
@@ -39,7 +38,7 @@ public class UIElementDragEx: IUIElementDrag
 
     public void Update(MouseState.ButtonState state, Vector3 rawMousePos)
     {
-        if(IsPinned || !AllowDrag) return;
+        if(IsPinned || !AllowDrag || !Panel.IsActive) return;
 
         Vector3 dragPos = DraggableArea.InverseTransformPoint(rawMousePos);
         bool inDragPos = DraggableArea.rect.Contains(dragPos);

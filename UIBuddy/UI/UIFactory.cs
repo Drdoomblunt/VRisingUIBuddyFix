@@ -2,8 +2,10 @@
 using TMPro;
 using UIBuddy.Classes;
 using UIBuddy.UI.Classes;
+using UIBuddy.UI.ScrollView;
 using UnityEngine;
 using UnityEngine.UI;
+using Button = UnityEngine.UI.Button;
 
 namespace UIBuddy.UI
 {
@@ -16,7 +18,7 @@ namespace UIBuddy.UI
 
         public static GameObject CreateUIObject(string name, GameObject parent, Vector2 sizeDelta = default)
         {
-            GameObject obj = new(name)
+            GameObject obj = new($"UIBuddy_{name}")
             {
                 layer = 5,
                 hideFlags = HideFlags.HideAndDontSave,
@@ -458,6 +460,245 @@ namespace UIBuddy.UI
             {
                 button.OnDeselect(null);
             });
+        }
+
+        public static ScrollPool<T> CreateScrollPool<T>(GameObject parent, string name, out GameObject uiRoot,
+            out GameObject content, Color? bgColor = null) where T : ICell
+        {
+            GameObject mainObj = CreateUIObject(name, parent, new Vector2(1, 1));
+            mainObj.AddComponent<Image>().color = bgColor ?? Theme.DarkBackground;
+            SetLayoutGroup<HorizontalLayoutGroup>(mainObj, false, true, true, true);
+            SetLayoutElement(mainObj, flexibleHeight: 9999, flexibleWidth: 9999);
+
+            GameObject viewportObj = CreateUIObject("Viewport", mainObj);
+            SetLayoutElement(viewportObj, flexibleWidth: 9999, flexibleHeight: 9999);
+            RectTransform viewportRect = viewportObj.GetComponent<RectTransform>();
+            viewportRect.anchorMin = Vector2.zero;
+            viewportRect.anchorMax = Vector2.one;
+            viewportRect.pivot = new Vector2(0.0f, 1.0f);
+            viewportRect.sizeDelta = new Vector2(0f, 0.0f);
+            viewportRect.offsetMax = new Vector2(-10.0f, 0.0f);
+            viewportObj.AddComponent<RectMask2D>();
+            viewportObj.AddComponent<Image>().color = Theme.ViewportBackground;
+            viewportObj.AddComponent<Mask>();
+
+            content = CreateUIObject("Content", viewportObj);
+            RectTransform contentRect = content.GetComponent<RectTransform>();
+            contentRect.anchorMin = Vector2.zero;
+            contentRect.anchorMax = Vector2.one;
+            contentRect.pivot = new Vector2(0.5f, 1f);
+            contentRect.sizeDelta = new Vector2(0f, 0f);
+            contentRect.offsetMax = new Vector2(0f, 0f);
+            SetLayoutGroup<VerticalLayoutGroup>(content, true, false, true, true, 0, 2, 2, 2, 2, TextAnchor.UpperCenter);
+            content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            // Slider
+
+            GameObject scrollBarObj = CreateUIObject("AutoSliderScrollbar", mainObj);
+            RectTransform scrollBarRect = scrollBarObj.GetComponent<RectTransform>();
+            scrollBarRect.anchorMin = new Vector2(1, 0);
+            scrollBarRect.anchorMax = Vector2.one;
+            scrollBarRect.offsetMin = new Vector2(-25, 0);
+            SetLayoutGroup<VerticalLayoutGroup>(scrollBarObj, false, true, true, true);
+            scrollBarObj.AddComponent<Image>().color = Theme.PanelBackground;
+            scrollBarObj.AddComponent<Mask>().showMaskGraphic = false;
+
+            GameObject hiddenBar = CreateScrollbar(scrollBarObj, "HiddenScrollviewScroller", out Scrollbar hiddenScrollbar);
+            hiddenScrollbar.SetDirection(Scrollbar.Direction.BottomToTop, true);
+
+            for (int i = 0; i < hiddenBar.transform.childCount; i++)
+            {
+                Transform child = hiddenBar.transform.GetChild(i);
+                child.gameObject.SetActive(false);
+            }
+
+            CreateSliderScrollbar(scrollBarObj, out Slider scrollSlider);
+
+            new AutoSliderScrollbar(hiddenScrollbar, scrollSlider, contentRect, viewportRect);
+
+            // Set up the ScrollRect component
+
+            ScrollRect scrollRect = mainObj.AddComponent<ScrollRect>();
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.verticalScrollbar = hiddenScrollbar;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            scrollRect.scrollSensitivity = 35;
+            scrollRect.horizontalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+            scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
+
+            scrollRect.viewport = viewportRect;
+            scrollRect.content = contentRect;
+
+
+            // finalize and create ScrollPool
+
+            uiRoot = mainObj;
+            ScrollPool<T> scrollPool = new(scrollRect);
+
+            return scrollPool;
+        }
+
+        public static GameObject CreateScrollbar(GameObject parent, string name, out Scrollbar scrollbar)
+        {
+            GameObject scrollObj = CreateUIObject(name, parent, SmallElementSize);
+
+            GameObject slideAreaObj = CreateUIObject("Sliding Area", scrollObj);
+            GameObject handleObj = CreateUIObject("Handle", slideAreaObj);
+
+            Image scrollImage = scrollObj.AddComponent<Image>();
+            scrollImage.type = Image.Type.Sliced;
+            scrollImage.color = Theme.DarkBackground;
+
+            Image handleImage = handleObj.AddComponent<Image>();
+            handleImage.type = Image.Type.Sliced;
+            handleImage.color = Theme.SliderHandle;
+
+            RectTransform slideAreaRect = slideAreaObj.GetComponent<RectTransform>();
+            slideAreaRect.sizeDelta = new Vector2(-20f, -20f);
+            slideAreaRect.anchorMin = Vector2.zero;
+            slideAreaRect.anchorMax = Vector2.one;
+
+            RectTransform handleRect = handleObj.GetComponent<RectTransform>();
+            handleRect.sizeDelta = new Vector2(20f, 20f);
+
+            scrollbar = scrollObj.AddComponent<Scrollbar>();
+            scrollbar.handleRect = handleRect;
+            scrollbar.targetGraphic = handleImage;
+
+            SetDefaultSelectableValues(scrollbar);
+
+            return scrollObj;
+        }
+
+        public static GameObject CreateSliderScrollbar(GameObject parent, out Slider slider)
+        {
+            GameObject mainObj = CreateUIObject("SliderScrollbar", parent, SmallElementSize);
+            //mainObj.AddComponent<Mask>().showMaskGraphic = false;
+            mainObj.AddComponent<Image>().color = Theme.DarkBackground;
+
+            //GameObject bgImageObj = CreateUIObject("Background", mainObj);
+            GameObject handleSlideAreaObj = CreateUIObject("Handle Slide Area", mainObj);
+            GameObject handleObj = CreateUIObject("Handle", handleSlideAreaObj);
+
+            RectTransform handleSlideRect = handleSlideAreaObj.GetComponent<RectTransform>();
+            handleSlideRect.anchorMin = Vector3.zero;
+            handleSlideRect.anchorMax = Vector3.one;
+            handleSlideRect.pivot = new Vector3(0.5f, 0.5f);
+
+            Image handleImage = handleObj.AddComponent<Image>();
+            handleImage.color = Theme.SliderHandle;
+
+            RectTransform handleRect = handleObj.GetComponent<RectTransform>();
+            handleRect.pivot = new Vector2(0.5f, 0.5f);
+            SetLayoutElement(handleObj, minWidth: 21, flexibleWidth: 0);
+
+            LayoutElement sliderBarLayout = mainObj.AddComponent<LayoutElement>();
+            sliderBarLayout.minWidth = 25;
+            sliderBarLayout.flexibleWidth = 0;
+            sliderBarLayout.minHeight = 30;
+            sliderBarLayout.flexibleHeight = 9999;
+
+            slider = mainObj.AddComponent<Slider>();
+            slider.handleRect = handleRect;
+            slider.fillRect = handleRect;
+            slider.targetGraphic = handleImage;
+            slider.direction = Slider.Direction.TopToBottom;
+
+            SetLayoutElement(mainObj, minWidth: 25, flexibleWidth: 0, flexibleHeight: 9999);
+
+            slider.colors = new ColorBlock()
+            {
+                normalColor = Theme.ScrollbarNormal,
+                highlightedColor = Theme.ScrollbarHighlighted,
+                pressedColor = Theme.ScrollbarPressed,
+                disabledColor = Theme.ScrollbarDisabled,
+                colorMultiplier = 1
+            };
+
+            return mainObj;
+        }
+
+        /// <summary>
+        /// Create a ScrollView and a SliderScrollbar for non-pooled content.
+        /// </summary>
+        /// <param name="parent">The parent GameObject to build on to.</param>
+        /// <param name="name">The GameObject name for your ScrollView.</param>
+        /// <param name="content">The GameObject for your content to be placed on.</param>
+        /// <param name="autoScrollbar">A created AutoSliderScrollbar instance for your ScrollView.</param>
+        /// <param name="color">The background color, defaults to grey.</param>
+        /// <returns>The root GameObject for your ScrollView.</returns>
+        public static GameObject CreateScrollView(GameObject parent, string name, out GameObject content, out AutoSliderScrollbar autoScrollbar,
+            Color color = default)
+        {
+            GameObject mainObj = CreateUIObject(name, parent);
+            RectTransform mainRect = mainObj.GetComponent<RectTransform>();
+            mainRect.anchorMin = Vector2.zero;
+            mainRect.anchorMax = Vector2.one;
+            Image mainImage = mainObj.AddComponent<Image>();
+            mainImage.type = Image.Type.Filled;
+            mainImage.color = color == default ? Theme.Level1 : color;
+
+            SetLayoutElement(mainObj, flexibleHeight: 9999, flexibleWidth: 9999);
+
+            GameObject viewportObj = CreateUIObject("Viewport", mainObj);
+            RectTransform viewportRect = viewportObj.GetComponent<RectTransform>();
+            viewportRect.anchorMin = Vector2.zero;
+            viewportRect.anchorMax = Vector2.one;
+            viewportRect.pivot = new Vector2(0.0f, 1.0f);
+            viewportRect.offsetMax = new Vector2(-28, 0);
+            // Need both <Image> and <Mask> to ensure the viewport masks correctly (even if viewport image isn't visible)
+            viewportObj.AddComponent<Image>().color = Theme.ViewportBackground;
+            viewportObj.AddComponent<Mask>().showMaskGraphic = false;
+
+            content = CreateUIObject("Content", viewportObj);
+            SetLayoutGroup<VerticalLayoutGroup>(content, true, false, true, true, childAlignment: TextAnchor.UpperLeft);
+            SetLayoutElement(content, flexibleHeight: 9999);
+            RectTransform contentRect = content.GetComponent<RectTransform>();
+            contentRect.anchorMin = Vector2.zero;
+            contentRect.anchorMax = Vector2.one;
+            contentRect.pivot = new Vector2(0.0f, 1.0f);
+            content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            // Slider
+
+            GameObject scrollBarObj = CreateUIObject("AutoSliderScrollbar", mainObj);
+            RectTransform scrollBarRect = scrollBarObj.GetComponent<RectTransform>();
+            scrollBarRect.anchorMin = new Vector2(1, 0);
+            scrollBarRect.anchorMax = Vector2.one;
+            scrollBarRect.offsetMin = new Vector2(-25, 0);
+            SetLayoutGroup<VerticalLayoutGroup>(scrollBarObj, false, true, true, true);
+            scrollBarObj.AddComponent<Image>().color = Theme.PanelBackground;
+            scrollBarObj.AddComponent<Mask>().showMaskGraphic = false;
+
+            GameObject hiddenBar = CreateScrollbar(scrollBarObj, "HiddenScrollviewScroller", out Scrollbar hiddenScrollbar);
+            hiddenScrollbar.SetDirection(Scrollbar.Direction.BottomToTop, true);
+
+            for (int i = 0; i < hiddenBar.transform.childCount; i++)
+            {
+                Transform child = hiddenBar.transform.GetChild(i);
+                child.gameObject.SetActive(false);
+            }
+
+            CreateSliderScrollbar(scrollBarObj, out Slider scrollSlider);
+
+            autoScrollbar = new AutoSliderScrollbar(hiddenScrollbar, scrollSlider, contentRect, viewportRect);
+
+            // Set up the ScrollRect component
+
+            ScrollRect scrollRect = mainObj.AddComponent<ScrollRect>();
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.verticalScrollbar = hiddenScrollbar;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            scrollRect.scrollSensitivity = 35;
+            scrollRect.horizontalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+            scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
+
+            scrollRect.viewport = viewportRect;
+            scrollRect.content = contentRect;
+
+            return mainObj;
         }
     }
 }

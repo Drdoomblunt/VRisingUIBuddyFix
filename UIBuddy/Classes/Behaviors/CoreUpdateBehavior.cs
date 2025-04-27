@@ -28,6 +28,7 @@ public class CoreUpdateBehavior : MonoBehaviour
     {
         CoroutineUtility.TickRoutines();
         InputFieldRef.UpdateInstances();
+        UIBehaviourModel.UpdateInstances();
 
         InputManager.Update();
         PanelManager.Instance?.Update();

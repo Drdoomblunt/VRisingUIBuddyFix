@@ -4,12 +4,12 @@ using HarmonyLib;
 using TMPro;
 using UIBuddy.Classes;
 using UIBuddy.Classes.Behaviors;
-using UIBuddy.UI.Panel;
+using UIBuddy.UI.Classes;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
-namespace UIBuddy.UI;
+namespace UIBuddy.UI.Panel;
 
 public class ElementPanel: GenericPanelBase
 {
@@ -94,7 +94,7 @@ public class ElementPanel: GenericPanelBase
                 }
 
                 // Create a header container at the top of the panel
-                var headerContainer = UIFactory.CreateUIObject("HeaderContainer", CustomUIObject);
+                var headerContainer = UIFactory.CreateUIObject($"HeaderContainer_{Name}", CustomUIObject);
                 if (headerContainer != null)
                 {
                     var headerRect = headerContainer.GetComponent<RectTransform>();
@@ -108,7 +108,7 @@ public class ElementPanel: GenericPanelBase
                     }
 
                     // Create the label with maximum width
-                    var label = UIFactory.CreateLabel(headerContainer, "NameLabel", Name,
+                    var label = UIFactory.CreateLabel(headerContainer, $"NameLabel_{Name}", Name,
                         alignment: TextAlignmentOptions.Left,
                         fontSize: 16);
 
@@ -127,7 +127,7 @@ public class ElementPanel: GenericPanelBase
                     }
 
                     // Create toggle in top-right corner using UIFactory
-                    var toggleContainer = UIFactory.CreateUIObject("ToggleContainer", headerContainer);
+                    var toggleContainer = UIFactory.CreateUIObject($"ToggleContainer_{Name}", headerContainer);
                     if (toggleContainer != null)
                     {
                         var toggleContainerRect = toggleContainer.GetComponent<RectTransform>();
@@ -141,7 +141,7 @@ public class ElementPanel: GenericPanelBase
                         }
 
                         // Use UIFactory to create the toggle
-                        var toggleRef = UIFactory.CreateToggle(toggleContainer, "EnableToggle");
+                        var toggleRef = UIFactory.CreateToggle(toggleContainer, $"EnableToggle_{Name}");
                         if (toggleRef != null)
                         {
                             // Hide the text

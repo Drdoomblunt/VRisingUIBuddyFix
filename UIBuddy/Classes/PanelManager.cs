@@ -4,6 +4,8 @@ using System.Linq;
 using UIBuddy.UI;
 using UIBuddy.UI.Classes;
 using UIBuddy.UI.Panel;
+using UIBuddy.UI.ScrollView;
+using UIBuddy.UI.ScrollView.Cells;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,10 +15,12 @@ namespace UIBuddy.Classes
     {
         private Vector3 _previousMousePosition;
         private MouseState.ButtonState _previousMouseButtonState;
+        private static List<ScrollPool<ButtonCell>> _pools = new();
         private static readonly List<IUIElementDrag> _draggers = new();
         public static bool WasAnyDragging;
         public static bool DraggerHandledThisFrame;
         protected virtual bool MouseInTargetDisplay => true;
+        public static GameObject PoolHolder { get; private set; }
 
         public static PanelManager Instance { get; private set; }
         public static GameObject CanvasRoot { get; private set; }
@@ -25,13 +29,23 @@ namespace UIBuddy.Classes
         public static GameObject PanelHolder { get; private set; }
         // Main control panel
         public static  MainControlPanel MainPanel { get; private set; }
+        public static ElementListPanel ElementListPanel { get; private set; }
 
         public PanelManager()
         {
             Instance = this;
             CreateRootCanvas();
             CreateMainPanel();
+            CreateElementListPanel();
         }
+
+        private void CreateElementListPanel()
+        {
+            ElementListPanel = new ElementListPanel(PanelHolder);
+            _draggers.Add(ElementListPanel.Dragger);
+            Plugin.Log.LogInfo("Elements list panel created and initialized successfully");
+        }
+
 
         private void CreateMainPanel()
         {
@@ -51,7 +65,7 @@ namespace UIBuddy.Classes
 
         private static void CreateRootCanvas()
         {
-            CanvasRoot = new GameObject("UIBuddyCanvas");
+            CanvasRoot = new GameObject("Canvas");
             var canvasRootRect = CanvasRoot.AddComponent<RectTransform>();
             UnityEngine.Object.DontDestroyOnLoad(CanvasRoot);
             CanvasRoot.SetActive(false);
@@ -81,11 +95,21 @@ namespace UIBuddy.Classes
             rect.anchorMax = Vector2.one;
 
             CanvasRoot.SetActive(true);
+
+
+            PoolHolder = new GameObject("UIBuddy_PoolHolder");
+            PoolHolder.transform.parent = CanvasRoot.transform;
+            PoolHolder.SetActive(false);
         }
 
 
         public void Update()
         {
+            foreach (var pool in _pools)
+            {
+                pool.Update();
+            }
+
             if (!DraggerHandledThisFrame)
                 UpdateDraggers();
 
@@ -112,9 +136,14 @@ namespace UIBuddy.Classes
                 MainPanel.Dragger.Update(state, mousePos);
             }
 
+            if (ElementListPanel is { IsActive: true } && ElementListPanel.Dragger.IsActive)
+            {
+                ElementListPanel.Dragger.Update(state, mousePos);
+            }
+
             if (!DraggerHandledThisFrame)
             {
-                foreach (var instance in _draggers.Where(instance => instance.IsActive))
+                foreach (var instance in _draggers.Where(instance => instance is { IsActive: true }))
                 {
                     instance.Update(state, mousePos);
 
@@ -135,14 +164,17 @@ namespace UIBuddy.Classes
         {
             var element = new ElementPanel(gameObjectName);
 
-            if(element.Initialize())
+            if (element.Initialize())
+            {
                 _draggers.Add(element.Dragger);
+                ElementListPanel.AddElement(element);
+            }
 
             // Set this element as the selected element in the main panel
             if (MainPanel != null && !string.IsNullOrEmpty(gameObjectName)
                 && MainPanel.SelectedElementPanel == null)
             {
-                SelectPanel(element);
+                //SelectPanel(element);
             }
         }
 
@@ -185,5 +217,9 @@ namespace UIBuddy.Classes
             return _draggers.Where(drag => drag.Panel != MainPanel).Select(a => a.Panel).ToList();
         }
 
+        public static void AddScrollPool(ScrollPool<ButtonCell> pool)
+        {
+            _pools.Add(pool);
+        }
     }
 }

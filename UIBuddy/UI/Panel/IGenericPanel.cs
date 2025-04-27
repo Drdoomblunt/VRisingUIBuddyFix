@@ -8,6 +8,7 @@ namespace UIBuddy.UI.Panel
 
         GameObject RootObject { get; }
         Vector2 ReferenceResolution { get; set; }
+        string Name { get; }
         float GetOwnerScaleFactor();
         void EnsureValidPosition();
         void SelectPanelAsCurrentlyActive(bool select);

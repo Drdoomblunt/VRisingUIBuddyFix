@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UIBuddy.Classes;
+using UIBuddy.UI.Classes;
 
 namespace UIBuddy.UI.Panel
 {
@@ -58,7 +59,7 @@ namespace UIBuddy.UI.Panel
             CreateTitleBar(RootObject);
 
             // Create vertical layout for the content area (excludes the title bar)
-            var contentArea = UIFactory.CreateUIObject("ContentArea", RootObject);
+            var contentArea = UIFactory.CreateUIObject($"ContentArea_{nameof(MainControlPanel)}", RootObject);
             var contentRect = contentArea.GetComponent<RectTransform>();
             contentRect.anchorMin = new Vector2(0, 0);
             contentRect.anchorMax = new Vector2(1, 1);
@@ -99,7 +100,7 @@ namespace UIBuddy.UI.Panel
 
         private void CreateTitleBar(GameObject parent)
         {
-            _titleBar = UIFactory.CreateUIObject("TitleBar", parent);
+            _titleBar = UIFactory.CreateUIObject($"TitleBar_{nameof(MainControlPanel)}", parent);
             var titleRect = _titleBar.GetComponent<RectTransform>();
 
             // Position the title bar at the top of the panel
@@ -125,12 +126,12 @@ namespace UIBuddy.UI.Panel
                 padRight: 10,
                 childAlignment: TextAnchor.MiddleCenter);
 
-            UIFactory.CreateLabel(_titleBar, "TitleLabel", "BuddyUI", fontSize: 18);
+            UIFactory.CreateLabel(_titleBar, $"TitleLabel_{nameof(MainControlPanel)}", "UIBuddy", fontSize: 18);
         }
 
         private void CreateNameRow(GameObject parent)
         {
-            var nameRow = UIFactory.CreateHorizontalGroup(parent, "NameRow",
+            var nameRow = UIFactory.CreateHorizontalGroup(parent, $"NameRow_{nameof(MainControlPanel)}",
                 forceExpandWidth: false,
                 forceExpandHeight: false,
                 childControlWidth: true,
@@ -141,12 +142,12 @@ namespace UIBuddy.UI.Panel
             UIFactory.SetLayoutElement(nameRow, minHeight: 30, preferredHeight: 30);
 
             // Name label
-            var nameLabel = UIFactory.CreateLabel(nameRow, "NameLabel", "Name",
+            var nameLabel = UIFactory.CreateLabel(nameRow, $"NameLabel_{nameof(MainControlPanel)}", "Name",
                 alignment: TextAlignmentOptions.Left);
             UIFactory.SetLayoutElement(nameLabel.GameObject, minWidth: 70, preferredWidth: 70);
 
             // Name value
-            var nameValue = UIFactory.CreateLabel(nameRow, "NameValue", "None",
+            var nameValue = UIFactory.CreateLabel(nameRow, $"NameValue_{nameof(MainControlPanel)}", "None",
                 alignment: TextAlignmentOptions.Left);
             _nameValueText = nameValue.TextMesh;
             UIFactory.SetLayoutElement(nameValue.GameObject, flexibleWidth: 1);
@@ -154,7 +155,7 @@ namespace UIBuddy.UI.Panel
 
         private void CreateScaleRow(GameObject parent)
         {
-            var scaleRow = UIFactory.CreateHorizontalGroup(parent, "ScaleRow",
+            var scaleRow = UIFactory.CreateHorizontalGroup(parent, $"ScaleRow_{nameof(MainControlPanel)}",
                 forceExpandWidth: false,
                 forceExpandHeight: false,
                 childControlWidth: true,
@@ -165,12 +166,12 @@ namespace UIBuddy.UI.Panel
             UIFactory.SetLayoutElement(scaleRow, minHeight: 35, preferredHeight: 35);
 
             // Scale label
-            var scaleLabel = UIFactory.CreateLabel(scaleRow, "ScaleLabel", "Scale",
+            var scaleLabel = UIFactory.CreateLabel(scaleRow, $"ScaleLabel_{nameof(MainControlPanel)}", "Scale",
                 alignment: TextAlignmentOptions.Left);
             UIFactory.SetLayoutElement(scaleLabel.GameObject, minWidth: 70, preferredWidth: 70);
 
             // Scale slider
-            var sliderObj = UIFactory.CreateSlider(scaleRow, "ScaleSlider", out var slider);
+            var sliderObj = UIFactory.CreateSlider(scaleRow, $"ScaleSlider_{nameof(MainControlPanel)}", out var slider);
             _scaleSlider = slider;
             _scaleSlider.minValue = 20.0f;
             _scaleSlider.maxValue = 100.0f;
@@ -179,7 +180,7 @@ namespace UIBuddy.UI.Panel
             UIFactory.SetLayoutElement(sliderObj, minWidth: 120, preferredWidth: 120, flexibleWidth: 1, minHeight: 35, preferredHeight: 35);
 
             // Scale input field
-            var scaleInputRef = UIFactory.CreateInputField(scaleRow, "ScaleInput", "");
+            var scaleInputRef = UIFactory.CreateInputField(scaleRow, $"ScaleInput_{nameof(MainControlPanel)}", "");
             _scaleInputField = scaleInputRef.Component;
             scaleInputRef.OnValueChanged += OnScaleInputChanged;
             UIFactory.SetLayoutElement(scaleInputRef.Component.gameObject, minWidth: 60, preferredWidth: 60, minHeight: 35, preferredHeight: 35);
@@ -187,7 +188,7 @@ namespace UIBuddy.UI.Panel
 
         private void CreateRotationRow(GameObject parent)
         {
-            var rotationRow = UIFactory.CreateHorizontalGroup(parent, "RotationRow",
+            var rotationRow = UIFactory.CreateHorizontalGroup(parent, $"RotationRow_{nameof(MainControlPanel)}",
                 forceExpandWidth: false,
                 forceExpandHeight: false,
                 childControlWidth: true,
@@ -198,12 +199,12 @@ namespace UIBuddy.UI.Panel
             UIFactory.SetLayoutElement(rotationRow, minHeight: 35, preferredHeight: 35);
 
             // Rotation label
-            var rotationLabel = UIFactory.CreateLabel(rotationRow, "RotationLabel", "Rotation",
+            var rotationLabel = UIFactory.CreateLabel(rotationRow, $"RotationLabel_{nameof(MainControlPanel)}", "Rotation",
                 alignment: TextAlignmentOptions.Left);
             UIFactory.SetLayoutElement(rotationLabel.GameObject, minWidth: 70, preferredWidth: 70);
 
             // Rotation slider
-            var sliderObj = UIFactory.CreateSlider(rotationRow, "RotationSlider", out var slider);
+            var sliderObj = UIFactory.CreateSlider(rotationRow, $"RotationSlider_{nameof(MainControlPanel)}", out var slider);
             _rotationSlider = slider;
             _rotationSlider.minValue = 0.0f;
             _rotationSlider.maxValue = 360.0f;
@@ -212,7 +213,7 @@ namespace UIBuddy.UI.Panel
             UIFactory.SetLayoutElement(sliderObj, minWidth: 120, preferredWidth: 120, flexibleWidth: 1, minHeight: 35, preferredHeight: 35);
 
             // Rotation input field
-            var inputRef = UIFactory.CreateInputField(rotationRow, "RotationInput", "");
+            var inputRef = UIFactory.CreateInputField(rotationRow, $"RotationInput_{nameof(MainControlPanel)}", "");
             _rotationInputField = inputRef.Component;
             inputRef.OnValueChanged += OnRotationInputChanged;
             UIFactory.SetLayoutElement(inputRef.Component.gameObject, minWidth: 60, preferredWidth: 60, minHeight: 35, preferredHeight: 35);
@@ -220,7 +221,7 @@ namespace UIBuddy.UI.Panel
 
         private void CreateCheckRow(GameObject parent)
         {
-            var row = UIFactory.CreateHorizontalGroup(parent, "NameRow",
+            var row = UIFactory.CreateHorizontalGroup(parent, $"CheckRow_{nameof(MainControlPanel)}",
                 forceExpandWidth: false,
                 forceExpandHeight: false,
                 childControlWidth: true,
@@ -230,7 +231,7 @@ namespace UIBuddy.UI.Panel
 
             UIFactory.SetLayoutElement(row, minHeight: 30, preferredHeight: 30);
 
-            var toggleRef = UIFactory.CreateToggle(row, "EnableCheck");
+            var toggleRef = UIFactory.CreateToggle(row, $"EnableCheck_{nameof(MainControlPanel)}");
             toggleRef.OnValueChanged += ToggleAllEnabled;
             toggleRef.Toggle.isOn = true; // Default value
             toggleRef.Text.text = "Show Panels";

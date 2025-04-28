@@ -6,15 +6,18 @@ using UnityEngine.UI;
 
 namespace UIBuddy.UI.ScrollView.Cells;
 
-public class ButtonCell : CellBase
+public class CheckButtonCell : CellBase
 {
     public ButtonRef Button { get; set; }
     public int CurrentDataIndex { get; set; }
     public override float DefaultHeight => 25f;
 
+    public Action<bool> OnToggleValueChanged;
+    private ToggleRef _toggle;
+
     public override GameObject CreateContent(GameObject parent)
     {
-        UIRoot = UIFactory.CreateHorizontalGroup(parent, "ButtonCell", true, false, true, true, 2, default,
+        UIRoot = UIFactory.CreateHorizontalGroup(parent, "ButtonCell", true, false, true, true, 5, default,
             new Color(0.11f, 0.11f, 0.11f, Theme.Opacity), TextAnchor.MiddleCenter);
         Rect = UIRoot.GetComponent<RectTransform>();
         Rect.anchorMin = new Vector2(0, 1);
@@ -24,6 +27,13 @@ public class ButtonCell : CellBase
         UIFactory.SetLayoutElement(UIRoot, minWidth: 100, flexibleWidth: 9999, minHeight: 25, flexibleHeight: 0);
 
         UIRoot.SetActive(false);
+
+        _toggle = UIFactory.CreateToggle(UIRoot, "ButtonToggle");
+        UIFactory.SetLayoutElement(_toggle.GameObject, 25, 25, preferredWidth: 25, preferredHeight: 25);
+        _toggle.OnValueChanged += value =>
+        {
+            OnToggleValueChanged?.Invoke(value);
+        };
 
         Button = UIFactory.CreateButton(UIRoot, "NameButton", "Name", new ColorBlock
         {
@@ -44,4 +54,9 @@ public class ButtonCell : CellBase
     }
 
     public Action<int> OnClick { get; set; }
+
+    public void SetInitialToggleValue(bool value)
+    {
+        _toggle.Toggle.isOn = value;
+    }
 }

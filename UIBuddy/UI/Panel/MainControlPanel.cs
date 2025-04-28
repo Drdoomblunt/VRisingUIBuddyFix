@@ -21,8 +21,6 @@ namespace UIBuddy.UI.Panel
         private bool _updatingUI = false;
         private GameObject _titleBar;
 
-        public UIElementDragEx Dragger { get; protected set; }
-
         // Properties
         public ElementPanel SelectedElementPanel
         {
@@ -38,9 +36,7 @@ namespace UIBuddy.UI.Panel
         public MainControlPanel(GameObject parent)
             : base(parent, nameof(MainControlPanel))
         {
-            ConstructUI();
         }
-
 
         #region UI CREATION
         protected override void ConstructUI()
@@ -85,7 +81,7 @@ namespace UIBuddy.UI.Panel
             CreateCheckRow(contentArea);
 
             // Create the dragger that uses the title bar for dragging
-            Dragger = new UIElementDragEx(_titleBar, this);
+            ConstructDrag(_titleBar);
 
             CoroutineUtility.StartCoroutine(LateSetupCoroutine());
         }
@@ -235,6 +231,15 @@ namespace UIBuddy.UI.Panel
             toggleRef.OnValueChanged += ToggleAllEnabled;
             toggleRef.Toggle.isOn = true; // Default value
             toggleRef.Text.text = "Show Panels";
+
+            var buttonRef = UIFactory.CreateButton(row, $"CloseButton_{nameof(MainControlPanel)}", "Close");
+            UIFactory.SetLayoutElement(buttonRef.GameObject, minWidth: 100, preferredWidth: 100, minHeight: 35,
+                preferredHeight: 35);
+            buttonRef.OnClick += () =>
+            {
+                PanelManager.SetPanelsActive(false);
+                SetActive(false);
+            };
         }
 
         private void UpdateUIForSelectedElement()
@@ -330,8 +335,7 @@ namespace UIBuddy.UI.Panel
             _rotationInputField.text = value.ToString("F1");
 
             // Apply rotation to the selected element
-            Vector3 eulerAngles = _selectedElementPanel.Transform.localEulerAngles;
-            _selectedElementPanel.Transform.localEulerAngles = new Vector3(eulerAngles.x, eulerAngles.y, value);
+            _selectedElementPanel.ApplyRotation(value);
         }
 
         private void OnRotationInputChanged(string value)
@@ -348,8 +352,7 @@ namespace UIBuddy.UI.Panel
                 _rotationSlider.value = rotationValue;
 
                 // Apply rotation to the selected element
-                Vector3 eulerAngles = _selectedElementPanel.Transform.localEulerAngles;
-                _selectedElementPanel.Transform.localEulerAngles = new Vector3(eulerAngles.x, eulerAngles.y, rotationValue);
+                _selectedElementPanel.ApplyRotation(rotationValue);
             }
         }
 

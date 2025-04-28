@@ -10,7 +10,7 @@ public class UIElementDragEx: IUIElementDrag
     // Instance
     public bool AllowDrag => true;
 
-    public event Action OnFinishDrag;
+    public Action OnFinishDrag;
 
     // Common
     private Vector2 _initialMousePos;
@@ -38,7 +38,7 @@ public class UIElementDragEx: IUIElementDrag
 
     public void Update(MouseState.ButtonState state, Vector3 rawMousePos)
     {
-        if(IsPinned || !AllowDrag || !Panel.IsActive) return;
+        if(IsPinned || !AllowDrag || !Panel.IsRootActive) return;
 
         Vector3 dragPos = DraggableArea.InverseTransformPoint(rawMousePos);
         bool inDragPos = DraggableArea.rect.Contains(dragPos);

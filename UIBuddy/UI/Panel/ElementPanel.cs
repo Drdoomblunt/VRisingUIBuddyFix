@@ -14,31 +14,31 @@ namespace UIBuddy.UI.Panel;
 public class ElementPanel: GenericPanelBase
 {
     public bool CanDrag => true;
-    public bool IsPinned => false;
 
     public CanvasScaler OwnerCanvasScaler { get; private set; }
     public Transform Transform { get; set; }
 
     private RectTransform CustomUIRect { get; set; }
     private GameObject CustomUIObject { get; set; }
-    public UIElementDragEx Dragger { get; protected set; }
     private RectOutline Outline { get; set; }
 
     // Track the original scale to allow proper reset
     private float _originalScaleFactor;
+    private ToggleRef _toggleRef;
 
     public ElementPanel(string gameObjectName)
         : base(gameObjectName)
     {
     }
 
-    public bool Initialize()
+    public override bool Initialize()
     {
         if (RootObject == null)
         {
             Plugin.Log.LogWarning($"Failed to initialize UIElement: {Name}");
             return false;
         }
+        ConstructDrag(RootObject);
 
         OwnerCanvasScaler = RootObject.GetComponent<CanvasScaler>();
 
@@ -48,9 +48,9 @@ public class ElementPanel: GenericPanelBase
         if(OwnerCanvasScaler == null)
             _originalScaleFactor = Transform.localScale.x;
 
-        ConstructUI();
 
-        Dragger = new UIElementDragEx(RootObject, this);
+        if(!base.Initialize())
+            return false;
 
         return true;
     }
@@ -141,31 +141,43 @@ public class ElementPanel: GenericPanelBase
                         }
 
                         // Use UIFactory to create the toggle
-                        var toggleRef = UIFactory.CreateToggle(toggleContainer, $"EnableToggle_{Name}");
-                        if (toggleRef != null)
+                        _toggleRef = UIFactory.CreateToggle(toggleContainer, $"EnableToggle_{Name}");
+                        if (_toggleRef != null)
                         {
                             // Hide the text
-                            if (toggleRef.Text != null)
+                            if (_toggleRef.Text != null)
                             {
-                                toggleRef.Text.text = "";
+                                _toggleRef.Text.text = "";
                             }
 
                             // Set the value change handler
-                            toggleRef.OnValueChanged += value =>
+                            _toggleRef.OnValueChanged += value =>
                             {
                                 if (RootObject != null)
+                                {
                                     RootObject.SetActive(value);
+                                    //on hide we should update all related controls
+                                    if (!value && PanelManager.MainPanel.SelectedElementPanel == this)
+                                    {
+                                        PanelManager.MainPanel.SelectedElementPanel = null;
+                                        SelectPanelAsCurrentlyActive(false);
+                                    }
+
+                                    PanelManager.ElementListPanel.UpdateElement(this);
+                                }
                             };
 
-                            if (toggleRef.Toggle != null)
+                            if (_toggleRef.Toggle != null)
                             {
-                                toggleRef.Toggle.isOn = true; // Default value
+                                _toggleRef.Toggle.isOn = true; // Default value
                             }
                         }
                     }
                 }
                 // Activate the UI
                 CustomUIObject.SetActive(true);
+
+                LoadConfigValues();
             }
         }
         catch (Exception ex)
@@ -209,10 +221,25 @@ public class ElementPanel: GenericPanelBase
             {
                 Transform.localScale = new Vector3(value, value, 1f);
             }
+            Save();
         }
         catch (Exception ex)
         {
             Plugin.Log.LogError($"Error applying scale to {Name}: {ex.Message}");
+        }
+    }
+
+    public void ApplyRotation(float value)
+    {
+        try
+        {
+            var eulerAngles = Transform.localEulerAngles;
+            Transform.localEulerAngles = new Vector3(eulerAngles.x, eulerAngles.y, value);
+            Save();
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogError($"Error applying rotation to {Name}: {ex.Message}");
         }
     }
 
@@ -233,16 +260,19 @@ public class ElementPanel: GenericPanelBase
     public override void SetActive(bool value)
     {
         if(!RootObject.activeSelf) return;
-
         CustomUIObject.SetActive(value);
-        if (!value)
-            PanelManager.DeselectPanels();
+        if(!value && PanelManager.MainPanel.SelectedElementPanel == this)
+            PanelManager.MainPanel.SelectedElementPanel = null;
     }
 
-    public override void SetActiveUnconditionally(bool value)
+    public override void SetRootActive(bool value)
     {
-        if (!RootObject.activeSelf) return;
-        CustomUIObject.SetActive(value);
+        //base.SetRootActive(value);
+        if(_toggleRef == null) //while loading
+            RootObject.SetActive(value);
+        else 
+            _toggleRef.Toggle.isOn = value;
+        Save();
     }
 
     public override void Dispose()

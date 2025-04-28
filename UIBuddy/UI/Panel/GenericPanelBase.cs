@@ -1,21 +1,27 @@
-﻿using UnityEngine;
+﻿using System;
+using UIBuddy.UI.Classes;
+using UnityEngine;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace UIBuddy.UI.Panel;
 
 public abstract class GenericPanelBase: IGenericPanel
 {
-    public bool IsActive => RootObject?.activeSelf ?? false;
+    public bool IsRootActive => RootObject?.activeSelf ?? false;
     public GameObject RootObject { get; }
     public Vector2 ReferenceResolution { get; set; }
     public string Name { get; }
     public RectTransform RootRect { get; }
     public Canvas OwnerCanvas { get; private set; }
+    public UIElementDragEx Dragger { get; protected set; }
+    private bool ApplyingSaveData { get; set; } = true;
+    public bool IsPinned => false;
 
     protected GenericPanelBase(string gameObjectName)
     {
         Name = gameObjectName;
-        RootObject = GameObject.Find(gameObjectName);
+        RootObject = gameObjectName.Contains('|') ? FindInHierarchy(gameObjectName) : GameObject.Find(gameObjectName);
         if(RootObject == null)
             return;
         RootRect = RootObject.GetComponent<RectTransform>();
@@ -27,11 +33,29 @@ public abstract class GenericPanelBase: IGenericPanel
 
     protected GenericPanelBase(GameObject parent, string panelInternalName)
     {
+        Name = panelInternalName;
         RootObject = UIFactory.CreateUIObject(panelInternalName, parent);
         RootRect = RootObject.GetComponent<RectTransform>();
         OwnerCanvas = RootObject.GetComponentInParent<Canvas>();
         ReferenceResolution = RootObject.GetComponentInParent<CanvasScaler>()?.referenceResolution ?? Vector2.zero;
     }
+
+    protected void ConstructDrag(GameObject dragObject)
+    {
+        Dragger = new UIElementDragEx(dragObject, this);
+        Dragger.OnFinishDrag += () => OnFinishedDrag();
+    }
+
+    public virtual bool Initialize()
+    {
+        if(RootObject == null)
+            return false;
+
+        ConstructUI();
+
+        return true;
+    }
+
 
     protected abstract void ConstructUI();
 
@@ -39,6 +63,8 @@ public abstract class GenericPanelBase: IGenericPanel
     {
         return OwnerCanvas.scaleFactor;
     }
+
+    #region EnsureValidPosition
 
     public virtual void EnsureValidPosition()
     {
@@ -177,6 +203,8 @@ public abstract class GenericPanelBase: IGenericPanel
         }
     }
 
+    #endregion
+
     public virtual void SelectPanelAsCurrentlyActive(bool select)
     {
     }
@@ -186,7 +214,7 @@ public abstract class GenericPanelBase: IGenericPanel
         RootObject.SetActive(value);
     }
 
-    public virtual void SetActiveUnconditionally(bool value)
+    public virtual void SetRootActive(bool value)
     {
         RootObject.SetActive(value);
     }
@@ -194,5 +222,130 @@ public abstract class GenericPanelBase: IGenericPanel
     public virtual void Dispose()
     {
         Object.Destroy(RootObject);
+    }
+
+    protected virtual void OnFinishedDrag()
+    {
+        Save();
+    }
+
+
+
+    #region Save/Load settings
+
+    private string PanelConfigKey => $"{Name}".Replace("'", "").Replace("\"", "").Replace(" ","_");
+
+    public void Save()
+    {
+        if (ApplyingSaveData) return;
+
+        SetSaveDataToConfigValue();
+    }
+
+    protected void LoadConfigValues()
+    {
+        ApplyingSaveData = true;
+        // apply panel save data or revert to default
+        try
+        {
+            ApplySaveData();
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogError($"Exception loading panel save data: {ex}");
+            EnsureValidPosition();
+        }
+        finally
+        {
+            ApplyingSaveData = false;
+        }
+
+    }
+
+    private void SetSaveDataToConfigValue()
+    {
+        Plugin.Instance.Config.Bind("Panels", PanelConfigKey, "", "Serialized panel data").Value = ToSaveData();
+    }
+
+    private string ToSaveData()
+    {
+        try
+        {
+            return string.Join("|", new string[]
+            {
+                IsRootActive.ToString(),
+                RootRect.RectAnchorsToString(),
+                RootRect.RectPositionToString(),
+                RootRect.RectRotationToString(),
+                IsPinned.ToString()
+            });
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogWarning($"Exception generating Panel save data: {ex}");
+            return "";
+        }
+    }
+
+    private void ApplySaveData()
+    {
+        var data = Plugin.Instance.Config.Bind("Panels", PanelConfigKey, "", "Serialized panel data").Value;
+        ApplySaveData(data);
+    }
+
+    private void ApplySaveData(string data)
+    {
+        if (string.IsNullOrEmpty(data))
+            return;
+        string[] split = data.Split('|');
+
+        try
+        {
+            if(bool.TryParse(split[0], out var isActive))
+                RootObject.SetActive(isActive);
+            RootRect.SetAnchorsFromString(split[1]);
+            RootRect.SetPositionFromString(split[2]);
+            RootRect.SetRotationFromString(split[3]);
+            //if (split.Length > 2 && bool.TryParse(split[4], out var pinned))
+            //   IsPinned = pinned;
+            //EnsureValidSize();
+            EnsureValidPosition();
+        }
+        catch
+        {
+            Plugin.Log.LogWarning("Invalid or corrupt panel save data! Restoring to default.");
+            //SetDefaultSizeAndPosition();
+            EnsureValidPosition();
+            SetSaveDataToConfigValue();
+        }
+    }
+
+    #endregion
+
+    public static GameObject FindInHierarchy(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return null;
+
+        string[] segments = path.Split('|');
+        if (segments.Length == 0)
+            return null;
+
+        // Start with the root object
+        GameObject current = GameObject.Find(segments[0]);
+        if (current == null)
+            return null;
+
+        // Navigate through the hierarchy path
+        for (int i = 1; i < segments.Length; i++)
+        {
+            Transform child = current.transform.Find(segments[i]);
+            if (child == null)
+                return null;
+
+            current = child.gameObject;
+        }
+
+        return current;
     }
 }

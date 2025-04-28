@@ -20,18 +20,20 @@ namespace UIBuddy
         private static Harmony Harmony;
         public static bool IsInitialized { get; set; }
         private static CoreUpdateBehavior _updateBehavior;
+        public static Plugin Instance { get; private set; }
 
         public override void Load()
         {
             // Plugin startup logic
             Log = base.Log;
             Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+            Instance = this;
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
 
             var t = new Timer(24000) { AutoReset = false};
             t.Elapsed += T_Elapsed;
-            t.Start();
+            //t.Start();
         }
 
         private void T_Elapsed(object sender, ElapsedEventArgs e)
@@ -53,10 +55,38 @@ namespace UIBuddy
                 _updateBehavior.Setup();
 
                 _pm = new PanelManager();
-                _pm.AddDrag("SLS logo");
+                _pm.AddDrag("BloodOrbParent");
+                _pm.AddDrag("TooltipAncor");
+                _pm.AddDrag("Background|Background");
+                _pm.AddDrag("Background|ActionBar");
+                _pm.AddDrag("ActionBarEntry");
+                _pm.AddDrag("AbilityBar");
+                _pm.AddDrag("AbilityBarEntry_Primary");
+
+
+                _pm.AddDrag("JournalParent(Clone)");
+                _pm.AddDrag("TargetInfoPanel(Clone)");
+                _pm.AddDrag("RootCanvasGroup");
+
+                _pm.AddDrag("Buffs");
+                _pm.AddDrag("Debuffs");
+                _pm.AddDrag("BottomBar(Clone)");
+
+                _pm.AddDrag("ClockParent3(Clone)|Content|Parent"); //daytime circle
+                _pm.AddDrag("BackgroundBig"); //clock/minimap background
+                _pm.AddDrag("MiniMapParent(Clone)|Root|Panel"); //minimap
+                /*
+                 _pm.AddDrag("SCTCanvas");
+
+
+                 */
+
+
+
+                /*_pm.AddDrag("SLS logo");
                 _pm.AddDrag("NewsPanelParent");
                 _pm.AddDrag("SideBar");
-                _pm.AddDrag("LinksParentNode");
+                _pm.AddDrag("LinksParentNode");*/
                 // _pm.AddDrag(null);
 
                 Log.LogInfo("UIBuddy initialized successfully");

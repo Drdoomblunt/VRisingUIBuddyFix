@@ -7,54 +7,75 @@ using UIBuddy.UI.ScrollView;
 using UnityEngine;
 using UnityEngine.UI;
 using UIBuddy.UI.Classes;
+using Unity.Entities.UniversalDelegates;
 
 namespace UIBuddy.UI.Panel
 {
     public class ElementListPanel: GenericPanelBase
     {
-        private ScrollPool<ButtonCell> _scrollPool;
-        private ButtonListHandler<ElementPanelData, ButtonCell> _scrollDataHandler;
+        private ScrollPool<CheckButtonCell> _scrollPool;
+        private ButtonListHandler<ElementPanelData, CheckButtonCell> _scrollDataHandler;
         private readonly List<ElementPanelData> _dataList = new();
         private GameObject _titleBar;
-        public UIElementDragEx Dragger { get; protected set; }
 
         public ElementListPanel(GameObject parent) 
             : base(parent, nameof(ElementListPanel))
         {
-            ConstructUI();
         }
 
         protected override void ConstructUI()
         {
             SetActive(true);
 
-            _titleBar = UIFactory.CreateUIObject($"TitleBar_{nameof(ElementListPanel)}", RootObject);
-            Dragger = new UIElementDragEx(_titleBar, this);
-
             // Set size for the main panel
-            RootRect.sizeDelta = new Vector2(200, 400);
+            RootRect.sizeDelta = new Vector2(300, 400);
+
             // Add background image
             var bgImage = RootObject.AddComponent<Image>();
             bgImage.type = Image.Type.Sliced;
             bgImage.color = Theme.PanelBackground;
 
+            // Create title bar
+            _titleBar = UIFactory.CreateUIObject($"TitleBar_{nameof(ElementListPanel)}", RootObject);
+            ConstructDrag(_titleBar);
+
+            // Create content area that takes all space below the title bar
             var contentArea = UIFactory.CreateUIObject($"ContentArea_{nameof(ElementListPanel)}", RootObject);
             var contentRect = contentArea.GetComponent<RectTransform>();
+
+            // This is critical for proper sizing:
             contentRect.anchorMin = new Vector2(0, 0);
             contentRect.anchorMax = new Vector2(1, 1);
             contentRect.pivot = new Vector2(0.5f, 0.5f);
-            // Position below the title bar
+            contentRect.anchoredPosition = Vector2.zero;
             contentRect.offsetMin = new Vector2(0, 0);
-            contentRect.offsetMax = new Vector2(0, -35); // Height of the title bar
+            contentRect.offsetMax = new Vector2(0, -35); // Account for title bar height
 
-            _scrollDataHandler = new ButtonListHandler<ElementPanelData, ButtonCell>(_scrollPool, GetEntries, SetCell, ShouldDisplay, OnCellClicked);
-            _scrollPool = UIFactory.CreateScrollPool<ButtonCell>(contentArea, $"ContentList_{nameof(ElementListPanel)}", out GameObject scrollObj,
-                out _, new Color(0.03f, 0.03f, 0.03f, Theme.Opacity));
+            // Critical: Create the scroll pool with data handler
+            _scrollDataHandler = new ButtonListHandler<ElementPanelData, CheckButtonCell>(null, GetEntries, SetCell, ShouldDisplay, OnCellClicked);
+
+            // Create the scroll pool, outputting the scrollObj
+            _scrollPool = UIFactory.CreateScrollPool<CheckButtonCell>(
+                contentArea,
+                $"ContentList_{nameof(ElementListPanel)}",
+                out GameObject scrollObj,
+                out _,
+                new Color(0.03f, 0.03f, 0.03f, Theme.Opacity));
+
+            // Set up the scroll object to fill the entire content area
+            var scrollRect = scrollObj.GetComponent<RectTransform>();
+            if (scrollRect != null)
+            {
+                scrollRect.anchorMin = Vector2.zero;
+                scrollRect.anchorMax = Vector2.one;
+                scrollRect.pivot = new Vector2(0.5f, 0.5f);
+                scrollRect.anchoredPosition = Vector2.zero;
+                scrollRect.sizeDelta = Vector2.zero; // This ensures it fills the parent
+            }
+
+            // Initialize the scroll pool
+            _scrollDataHandler = new ButtonListHandler<ElementPanelData, CheckButtonCell>(_scrollPool, GetEntries, SetCell, ShouldDisplay, OnCellClicked);
             _scrollPool.Initialize(_scrollDataHandler);
-            /////PanelManager.AddScrollPool(_scrollPool);
-            UIFactory.SetLayoutElement(scrollObj, flexibleHeight: 9999);
-
-
 
             CoroutineUtility.StartCoroutine(LateSetupCoroutine());
         }
@@ -93,10 +114,7 @@ namespace UIBuddy.UI.Panel
         {
             yield return null;
 
-            // Create title bar (must be created first as we'll use it for the dragger)
             CreateTitleBar(RootObject);
-
-
             // Activate the UI
             RootObject.SetActive(true);
         }
@@ -105,25 +123,47 @@ namespace UIBuddy.UI.Panel
         {
             var data = new ElementPanelData { Panel = panel };
             _dataList.Add(data);
+            _scrollDataHandler.RefreshData();
+            _scrollPool.Refresh(true);
+        }
+
+        public void RemoveElement(IGenericPanel panel)
+        {
+            var data = _dataList.Find(d => d.Panel == panel);
+            if (data != null)
+            {
+                _dataList.Remove(data);
+                _scrollDataHandler.RefreshData();
+                _scrollPool.Refresh(true);
+            }
         }
 
         private void OnCellClicked(int dataIndex)
         {
-            var famBox = _dataList[dataIndex];
-           ///////
+            var data = _dataList[dataIndex];
+           PanelManager.SelectPanel(data.Panel);
         }
 
         private bool ShouldDisplay(ElementPanelData data, string filter) => true;
         private List<ElementPanelData> GetEntries() => _dataList;
 
-        private void SetCell(ButtonCell cell, int index)
+        private void SetCell(CheckButtonCell cell, int index)
         {
             if (index < 0 || index >= _dataList.Count)
             {
                 cell.Disable();
                 return;
             }
-            cell.Button.ButtonText.text = _dataList[index].Panel.Name;
+            var data = _dataList[index];
+            cell.Button.ButtonText.text = data.Panel.Name;
+            cell.SetInitialToggleValue(data.Panel.IsRootActive);
+            cell.OnToggleValueChanged += value => data.Panel.SetRootActive(value);
+        }
+
+        public void UpdateElement(ElementPanel panel)
+        {
+            _scrollDataHandler.RefreshData();
+            _scrollPool.Refresh(true);
         }
     }
 

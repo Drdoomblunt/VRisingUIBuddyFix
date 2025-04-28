@@ -4,7 +4,7 @@ namespace UIBuddy.UI.Panel
 {
     public interface IGenericPanel
     {
-        bool IsActive { get; }
+        bool IsRootActive { get; }
 
         GameObject RootObject { get; }
         Vector2 ReferenceResolution { get; set; }
@@ -13,7 +13,7 @@ namespace UIBuddy.UI.Panel
         void EnsureValidPosition();
         void SelectPanelAsCurrentlyActive(bool select);
         void SetActive(bool value);
-        void SetActiveUnconditionally(bool value);
+        void SetRootActive(bool value);
         void Dispose();
     }
 }

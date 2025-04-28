@@ -15,7 +15,7 @@ namespace UIBuddy.Classes
     {
         private Vector3 _previousMousePosition;
         private MouseState.ButtonState _previousMouseButtonState;
-        private static List<ScrollPool<ButtonCell>> _pools = new();
+        private static List<ScrollPool<CheckButtonCell>> _pools = new();
         private static readonly List<IUIElementDrag> _draggers = new();
         public static bool WasAnyDragging;
         public static bool DraggerHandledThisFrame;
@@ -42,6 +42,7 @@ namespace UIBuddy.Classes
         private void CreateElementListPanel()
         {
             ElementListPanel = new ElementListPanel(PanelHolder);
+            ElementListPanel.Initialize();
             _draggers.Add(ElementListPanel.Dragger);
             Plugin.Log.LogInfo("Elements list panel created and initialized successfully");
         }
@@ -53,6 +54,7 @@ namespace UIBuddy.Classes
             {
                 // Create the main control panel
                 MainPanel = new MainControlPanel(PanelHolder);
+                MainPanel.Initialize();
                 _draggers.Add(MainPanel.Dragger);
                 Plugin.Log.LogInfo("Main panel created and initialized successfully");
 
@@ -130,21 +132,11 @@ namespace UIBuddy.Classes
             _previousMousePosition = mousePos;
             _previousMouseButtonState = state;
 
-            //update main panel
-            if (MainPanel is { IsActive: true } && MainPanel.Dragger.IsActive)
-            {
-                MainPanel.Dragger.Update(state, mousePos);
-            }
-
-            if (ElementListPanel is { IsActive: true } && ElementListPanel.Dragger.IsActive)
-            {
-                ElementListPanel.Dragger.Update(state, mousePos);
-            }
-
             if (!DraggerHandledThisFrame)
             {
                 foreach (var instance in _draggers.Where(instance => instance is { IsActive: true }))
                 {
+                    if(!instance.Panel.IsRootActive) continue;
                     instance.Update(state, mousePos);
 
                     if (DraggerHandledThisFrame)
@@ -187,39 +179,37 @@ namespace UIBuddy.Classes
 
         public static void SelectPanel(IGenericPanel panel)
         {
-            if(panel == MainPanel)
+            if(panel == MainPanel || panel == ElementListPanel)
                 return;
 
+            // clear all panels outline
             foreach (var drag in _draggers)
                 drag.Panel.SelectPanelAsCurrentlyActive(false);
+            
+            // do not select inactive panel
+            if (!panel.IsRootActive)
+            {
+                MainPanel.SelectedElementPanel = null;
+                return;
+            }
+
+            // select panel
             panel.SelectPanelAsCurrentlyActive(true);
             MainPanel.SelectedElementPanel = panel as ElementPanel;
         }
 
         public static void SetPanelsActive(bool value)
         {
-            foreach (var drag in _draggers.Where(drag => drag.Panel != MainPanel))
+            foreach (var panel in GetAllPanels())
             {
-                drag.Panel.SetActive(value);
-            }
-        }
-
-        public static void DeselectPanels()
-        {
-            foreach (var drag in _draggers.Where(drag => drag.Panel != MainPanel))
-            {
-                drag.Panel.SetActiveUnconditionally(false);
+                panel.SetActive(value);
             }
         }
 
         public static List<IGenericPanel> GetAllPanels()
         {
-            return _draggers.Where(drag => drag.Panel != MainPanel).Select(a => a.Panel).ToList();
-        }
-
-        public static void AddScrollPool(ScrollPool<ButtonCell> pool)
-        {
-            _pools.Add(pool);
+            return _draggers.Where(drag => drag.Panel != MainPanel && drag.Panel != ElementListPanel)
+                .Select(a => a.Panel).ToList();
         }
     }
 }

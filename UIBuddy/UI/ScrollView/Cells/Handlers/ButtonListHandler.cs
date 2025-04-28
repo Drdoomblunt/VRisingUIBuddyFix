@@ -6,7 +6,7 @@ namespace UIBuddy.UI.ScrollView.Cells.Handlers;
 /// <summary>
 /// A helper to create and handle a simple <see cref="ScrollPool{T}"/> of Buttons, which can be backed by any data.
 /// </summary>
-public class ButtonListHandler<TData, TCell> : ICellPoolDataSource<TCell> where TCell : ButtonCell
+public class ButtonListHandler<TData, TCell> : ICellPoolDataSource<TCell> where TCell : CheckButtonCell
 {
     public ScrollPool<TCell> ScrollPool { get; private set; }
 

@@ -80,8 +80,6 @@ public class UIElementDragEx: IUIElementDrag
         WasDragging = true;
         _initialMousePos = InputManager.Mouse.Position;
         _initialValue = Rect.anchoredPosition;
-
-        PanelManager.SelectPanel(Panel);
     }
 
     public void OnDrag()

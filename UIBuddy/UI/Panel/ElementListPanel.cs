@@ -28,7 +28,7 @@ namespace UIBuddy.UI.Panel
             SetActive(true);
 
             // Set size for the main panel
-            RootRect.sizeDelta = new Vector2(300, 400);
+            RootRect.sizeDelta = new Vector2(400, 400);
 
             // Add background image
             var bgImage = RootObject.AddComponent<Image>();

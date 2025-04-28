@@ -26,8 +26,8 @@ public class ElementPanel: GenericPanelBase
     private float _originalScaleFactor;
     private ToggleRef _toggleRef;
 
-    public ElementPanel(string gameObjectName)
-        : base(gameObjectName)
+    public ElementPanel(string gameObjectName, string friendlyName)
+        : base(gameObjectName, friendlyName)
     {
     }
 
@@ -110,7 +110,7 @@ public class ElementPanel: GenericPanelBase
                     // Create the label with maximum width
                     var label = UIFactory.CreateLabel(headerContainer, $"NameLabel_{Name}", Name,
                         alignment: TextAlignmentOptions.Left,
-                        fontSize: 16);
+                        fontSize: 12);
 
                     if (label != null && label.GameObject != null)
                     {
@@ -252,9 +252,6 @@ public class ElementPanel: GenericPanelBase
     {
         if (Outline == null || !RootObject.activeSelf) return;
         Outline.SetActive(select);
-        if (select)
-            RootObject.transform.SetAsLastSibling();
-
     }
 
     public override void SetActive(bool value)

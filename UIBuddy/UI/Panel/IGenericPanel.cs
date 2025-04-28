@@ -7,6 +7,7 @@ namespace UIBuddy.UI.Panel
         bool IsRootActive { get; }
 
         GameObject RootObject { get; }
+        RectTransform RootRect { get; }
         Vector2 ReferenceResolution { get; set; }
         string Name { get; }
         float GetOwnerScaleFactor();

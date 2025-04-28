@@ -18,13 +18,15 @@ public abstract class GenericPanelBase: IGenericPanel
     private bool ApplyingSaveData { get; set; } = true;
     public bool IsPinned => false;
 
-    protected GenericPanelBase(string gameObjectName)
+    protected GenericPanelBase(string gameObjectName, string friendlyName)
     {
-        Name = gameObjectName;
+        Name = friendlyName ?? gameObjectName;
         RootObject = gameObjectName.Contains('|') ? FindInHierarchy(gameObjectName) : GameObject.Find(gameObjectName);
         if(RootObject == null)
             return;
         RootRect = RootObject.GetComponent<RectTransform>();
+        if(RootRect.sizeDelta.x < 25f || RootRect.sizeDelta.y < 25f)
+            RootRect.sizeDelta = new Vector2(50f, 50f);
         OwnerCanvas = RootObject.GetComponentInParent<Canvas>();
         ReferenceResolution = RootObject.GetComponent<CanvasScaler>()?.referenceResolution ??
                               RootObject.GetComponentInParent<CanvasScaler>()?.referenceResolution ??
@@ -70,6 +72,8 @@ public abstract class GenericPanelBase: IGenericPanel
     {
         if (RootRect == null || ReferenceResolution == Vector2.zero)
             return;
+
+        return; //TODO
 
         // Get current canvas scale factor to adjust position constraints
         float canvasScale = GetOwnerScaleFactor();

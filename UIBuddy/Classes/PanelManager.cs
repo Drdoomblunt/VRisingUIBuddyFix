@@ -8,6 +8,7 @@ using UIBuddy.UI.ScrollView;
 using UIBuddy.UI.ScrollView.Cells;
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEngine.UI.GridLayoutGroup;
 
 namespace UIBuddy.Classes
 {
@@ -30,6 +31,12 @@ namespace UIBuddy.Classes
         // Main control panel
         public static  MainControlPanel MainPanel { get; private set; }
         public static ElementListPanel ElementListPanel { get; private set; }
+        protected internal static bool FocusHandledThisFrame;
+
+        protected virtual bool ShouldUpdateFocus
+        {
+            get => MouseInTargetDisplay && (InputManager.Mouse.Button0 == MouseState.ButtonState.Down || InputManager.Mouse.Button1 == MouseState.ButtonState.Down) && !WasAnyDragging;
+        }
 
         public PanelManager()
         {
@@ -107,6 +114,10 @@ namespace UIBuddy.Classes
 
         public void Update()
         {
+            if (ShouldUpdateFocus)
+                UpdateFocus();
+
+
             foreach (var pool in _pools)
             {
                 pool.Update();
@@ -116,6 +127,84 @@ namespace UIBuddy.Classes
                 UpdateDraggers();
 
             DraggerHandledThisFrame = false;
+            FocusHandledThisFrame = false;
+        }
+
+        protected virtual void UpdateFocus()
+        {
+            bool clickedInAny = false;
+
+            // If another UIBase has already handled a user's click for focus, don't update it for this UIBase.
+            if (!FocusHandledThisFrame)
+            {
+                Vector3 mousePos = InputManager.Mouse.Position;
+                int count = _draggers.Count;// PanelHolder.transform.childCount;
+
+
+                var panelsThroughClick = _draggers.Where(a =>
+                        a.Panel.IsRootActive &&
+                        a.Panel.RootRect.rect.Contains(a.Panel.RootRect.InverseTransformPoint(mousePos)))
+                    .Select(a => a.Panel).ToList();
+
+                if (panelsThroughClick.Count > 1)
+                {
+                    foreach (var panel in panelsThroughClick)
+                    {
+                        if (MainPanel.SelectedElementPanel != panel)
+                        {
+                            SelectPanel(panel);
+                            if(panel is not ElementPanel)
+                                panel.RootObject.transform.SetAsLastSibling();
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    var panel = panelsThroughClick.FirstOrDefault();
+                    if (panel != null)
+                    {
+                        SelectPanel(panel);
+                        if(panel is not ElementPanel)
+                            panel.RootObject.transform.SetAsLastSibling();
+                    }
+                }
+                FocusHandledThisFrame = true;
+
+
+                /*for (int i = count - 1; i >= 0; i--)
+                {
+                    // make sure this is a real recognized panel
+                    var panel = _draggers[i].Panel;
+                    Transform transform = panel.RootObject.GetComponent<Transform>();
+
+                    // check if our mouse is clicking inside the panel
+                    Vector3 pos = panel.RootRect.InverseTransformPoint(mousePos);
+                    if (!panel.IsRootActive || !panel.RootRect.rect.Contains(pos)) continue;
+
+                    // Panel was clicked in.
+                    focusHandledThisFrame = true;
+                    clickedInAny = true;
+
+                   // int offset = CanvasRoot.transform.childCount - RootRect.GetSiblingIndex();
+                   // Canvas.sortingOrder = TOP_SORTORDER - offset;
+
+
+                    // if this is not the top panel, reorder and invoke the onchanged event
+                    if (transform.GetSiblingIndex() != count - 1)
+                    {
+                        // Set the clicked panel to be on top
+                        transform.SetAsLastSibling();
+
+                        ///////////InvokeOnPanelsReordered();
+                    }
+
+                    break;
+                }*/
+            }
+
+            //if (!clickedInAny)
+            //    OnClickedOutsidePanels?.Invoke();
         }
 
         protected virtual void UpdateDraggers()
@@ -152,21 +241,14 @@ namespace UIBuddy.Classes
             }
         }
 
-        public void AddDrag(string gameObjectName)
+        public void AddDrag(string gameObjectName, string friendlyName = null)
         {
-            var element = new ElementPanel(gameObjectName);
+            var element = new ElementPanel(gameObjectName, friendlyName);
 
             if (element.Initialize())
             {
                 _draggers.Add(element.Dragger);
                 ElementListPanel.AddElement(element);
-            }
-
-            // Set this element as the selected element in the main panel
-            if (MainPanel != null && !string.IsNullOrEmpty(gameObjectName)
-                && MainPanel.SelectedElementPanel == null)
-            {
-                //SelectPanel(element);
             }
         }
 

@@ -8,6 +8,7 @@ using Il2CppInterop.Runtime.Injection;
 using UIBuddy.Classes;
 using UIBuddy.Classes.Behaviors;
 using UIBuddy.UI;
+using UnityEngine;
 
 namespace UIBuddy
 {
@@ -55,32 +56,34 @@ namespace UIBuddy
                 _updateBehavior.Setup();
 
                 _pm = new PanelManager();
-                _pm.AddDrag("BloodOrbParent");
-                _pm.AddDrag("TooltipAncor");
-                _pm.AddDrag("Background|Background");
-                _pm.AddDrag("Background|ActionBar");
-                _pm.AddDrag("ActionBarEntry");
-                _pm.AddDrag("AbilityBar");
-                _pm.AddDrag("AbilityBarEntry_Primary");
+                _pm.AddDrag("BloodOrbParent", "Blood Orb HP");
 
-
-                _pm.AddDrag("JournalParent(Clone)");
-                _pm.AddDrag("TargetInfoPanel(Clone)");
+                _pm.AddDrag("JournalParent(Clone)", "Journal (left top anchor)");
+                _pm.AddDrag("TargetInfoPanel(Clone)", "Target Info");
                 _pm.AddDrag("RootCanvasGroup");
 
                 _pm.AddDrag("Buffs");
                 _pm.AddDrag("Debuffs");
-                _pm.AddDrag("BottomBar(Clone)");
+                _pm.AddDrag("BottomBar(Clone)", "Full Bottom Bar"); //bottom bar
+                _pm.AddDrag("BottomBar(Clone)|Content|Background|Background", "Bottom Bar Fade"); //bottom bar fade
+                _pm.AddDrag("BottomBar(Clone)|Content|Background|DarkFade", "Bottom Bar BG"); //bottom bar bg
+                _pm.AddDrag("BottomBar(Clone)|Content|Background|ActionBar", "Action Bar"); //action bar
+                _pm.AddDrag("BottomBar(Clone)|Content|Background|ActionBar|ActionBarEntry", "ACB1"); //ab1
+                _pm.AddDrag("BottomBar(Clone)|Content|Background|ActionBar|ActionBarEntry (1)", "ACB2"); //ab2
+                _pm.AddDrag("BottomBar(Clone)|Content|Background|AbilityBar", "Ability Bar"); //abilityBar bar
+                _pm.AddDrag("AbilityBarEntry_Primary", "AB primary");
 
-                _pm.AddDrag("ClockParent3(Clone)|Content|Parent"); //daytime circle
-                _pm.AddDrag("BackgroundBig"); //clock/minimap background
-                _pm.AddDrag("MiniMapParent(Clone)|Root|Panel"); //minimap
-                /*
-                 _pm.AddDrag("SCTCanvas");
+                _pm.AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|HUDAlertParent(Clone)|Container", "Right Alerts"); //right alerts
+                _pm.AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|DangerTextParent(Clone)|Alpha|Background", "Bottom Danger (big right shift)"); //bottom danger text
+                _pm.AddDrag("HUDChatParent|ChatWindow(Clone)|Content", "Chat Window"); //chat
 
+                _pm.AddDrag("ClockParent3(Clone)|Content|Parent", "DayNight sphere"); //daytime circle
+                _pm.AddDrag("BackgroundBig", "Clock+Minimap BG"); //clock/minimap background
+                _pm.AddDrag("MiniMapParent(Clone)|Root|Panel", "Minimap"); //minimap
 
-                 */
-
+                // _pm.AddDrag("HUDClan"); //clan
+                // _pm.AddDrag("HUDTutorial"); //tutorial
+                // _pm.AddDrag("HUDRecipeTrackerParent"); //recipe tracker
 
 
                 /*_pm.AddDrag("SLS logo");

@@ -24,7 +24,7 @@ public class ElementPanel: GenericPanelBase
 
     // Track the original scale to allow proper reset
     private float _originalScaleFactor;
-    private ToggleRef _toggleRef;
+    //private ToggleRef _toggleRef;
 
     public ElementPanel(string gameObjectName, string friendlyName)
         : base(gameObjectName, friendlyName)
@@ -94,7 +94,7 @@ public class ElementPanel: GenericPanelBase
                 }
 
                 // Create a header container at the top of the panel
-                var headerContainer = UIFactory.CreateUIObject($"HeaderContainer_{Name}", CustomUIObject);
+                /*var headerContainer = UIFactory.CreateUIObject($"HeaderContainer_{Name}", CustomUIObject);
                 if (headerContainer != null)
                 {
                     var headerRect = headerContainer.GetComponent<RectTransform>();
@@ -173,7 +173,7 @@ public class ElementPanel: GenericPanelBase
                             }
                         }
                     }
-                }
+                }*/
                 // Activate the UI
                 CustomUIObject.SetActive(true);
 
@@ -265,10 +265,10 @@ public class ElementPanel: GenericPanelBase
     public override void SetRootActive(bool value)
     {
         //base.SetRootActive(value);
-        if(_toggleRef == null) //while loading
+        //if(_toggleRef == null) //while loading
             RootObject.SetActive(value);
-        else 
-            _toggleRef.Toggle.isOn = value;
+        //else 
+        //    _toggleRef.Toggle.isOn = value;
         Save();
     }
 

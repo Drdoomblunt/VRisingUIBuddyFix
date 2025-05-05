@@ -44,7 +44,7 @@ namespace UIBuddy.UI.Panel
             RootObject.SetActive(false);
 
             // Set size for the main panel
-            RootRect.sizeDelta = new Vector2(300, 200);
+            RootRect.sizeDelta = new Vector2(300, 300);
 
             // Add background image
             var bgImage = RootObject.AddComponent<Image>();
@@ -79,6 +79,7 @@ namespace UIBuddy.UI.Panel
             CreateScaleRow(contentArea);
             CreateRotationRow(contentArea);
             CreateCheckRow(contentArea);
+            CreateButtonsRow(contentArea);
 
             // Create the dragger that uses the title bar for dragging
             ConstructDrag(_titleBar);
@@ -112,7 +113,7 @@ namespace UIBuddy.UI.Panel
             bgImage.color = Theme.SliderNormal;
 
             // Create a horizontal layout for the title label
-            var titleLayout = UIFactory.SetLayoutGroup<HorizontalLayoutGroup>(_titleBar,
+            UIFactory.SetLayoutGroup<HorizontalLayoutGroup>(_titleBar,
                 childControlWidth: true,
                 childControlHeight: true,
                 spacing: 0,
@@ -122,7 +123,22 @@ namespace UIBuddy.UI.Panel
                 padRight: 10,
                 childAlignment: TextAnchor.MiddleCenter);
 
-            UIFactory.CreateLabel(_titleBar, $"TitleLabel_{nameof(MainControlPanel)}", "UIBuddy", fontSize: 18);
+            UIFactory.CreateLabel(_titleBar, $"TitleLabel_{nameof(MainControlPanel)}",
+                $"UI Buddy v{MyPluginInfo.PLUGIN_VERSION}", fontSize: 18);
+
+            var toggleContainer = UIFactory.CreateUIObject($"ToggleContainer_{Name}", _titleBar);
+            var toggleContainerRect = toggleContainer.GetComponent<RectTransform>();
+            toggleContainerRect.anchorMin = new Vector2(0.9f, 0);
+            toggleContainerRect.anchorMax = new Vector2(1, 1);
+            toggleContainerRect.pivot = new Vector2(1, 0.5f);
+            toggleContainerRect.anchoredPosition = new Vector2(-10, 0);
+            toggleContainerRect.sizeDelta = Vector2.zero;
+            var toggleRef = UIFactory.CreateToggle(toggleContainer, $"EnableToggle_{Name}");
+            toggleRef.OnValueChanged += value =>
+            {
+                EnableMainPanel(value);
+            };
+            toggleRef.Toggle.isOn = true;
         }
 
         private void CreateNameRow(GameObject parent)
@@ -139,12 +155,12 @@ namespace UIBuddy.UI.Panel
 
             // Name label
             var nameLabel = UIFactory.CreateLabel(nameRow, $"NameLabel_{nameof(MainControlPanel)}", "Name",
-                alignment: TextAlignmentOptions.Left);
+                alignment: TextAlignmentOptions.Left, fontSize: 16);
             UIFactory.SetLayoutElement(nameLabel.GameObject, minWidth: 70, preferredWidth: 70);
 
             // Name value
             var nameValue = UIFactory.CreateLabel(nameRow, $"NameValue_{nameof(MainControlPanel)}", "None",
-                alignment: TextAlignmentOptions.Left);
+                alignment: TextAlignmentOptions.Left, fontSize: 16);
             _nameValueText = nameValue.TextMesh;
             UIFactory.SetLayoutElement(nameValue.GameObject, flexibleWidth: 1);
         }
@@ -163,7 +179,7 @@ namespace UIBuddy.UI.Panel
 
             // Scale label
             var scaleLabel = UIFactory.CreateLabel(scaleRow, $"ScaleLabel_{nameof(MainControlPanel)}", "Scale",
-                alignment: TextAlignmentOptions.Left);
+                alignment: TextAlignmentOptions.Left, fontSize: 16);
             UIFactory.SetLayoutElement(scaleLabel.GameObject, minWidth: 70, preferredWidth: 70);
 
             // Scale slider
@@ -196,7 +212,7 @@ namespace UIBuddy.UI.Panel
 
             // Rotation label
             var rotationLabel = UIFactory.CreateLabel(rotationRow, $"RotationLabel_{nameof(MainControlPanel)}", "Rotation",
-                alignment: TextAlignmentOptions.Left);
+                alignment: TextAlignmentOptions.Left, fontSize: 16);
             UIFactory.SetLayoutElement(rotationLabel.GameObject, minWidth: 70, preferredWidth: 70);
 
             // Rotation slider
@@ -231,15 +247,39 @@ namespace UIBuddy.UI.Panel
             toggleRef.OnValueChanged += ToggleAllEnabled;
             toggleRef.Toggle.isOn = true; // Default value
             toggleRef.Text.text = "Show Panels";
+            toggleRef.Text.fontSize = 16;
 
-            var buttonRef = UIFactory.CreateButton(row, $"CloseButton_{nameof(MainControlPanel)}", "Close");
-            UIFactory.SetLayoutElement(buttonRef.GameObject, minWidth: 100, preferredWidth: 100, minHeight: 35,
+
+        }
+
+        private void CreateButtonsRow(GameObject parent)
+        {
+            var row = UIFactory.CreateHorizontalGroup(parent, $"ButtonsRow1_{nameof(MainControlPanel)}",
+                forceExpandWidth: false,
+                forceExpandHeight: false,
+                childControlWidth: true,
+                childControlHeight: true,
+                spacing: 10,
+                new Vector4(5, 5, 5, 5));
+
+            UIFactory.SetLayoutElement(row, minHeight: 30, preferredHeight: 30);
+
+            var buttonReload = UIFactory.CreateButton(row, $"ParseButton_{nameof(MainControlPanel)}", "Reload Elements");
+            UIFactory.SetLayoutElement(buttonReload.GameObject, minWidth: 150, preferredWidth: 150, minHeight: 35,
                 preferredHeight: 35);
-            buttonRef.OnClick += () =>
+            buttonReload.OnClick += () =>
             {
-                PanelManager.SetPanelsActive(false);
-                SetActive(false);
+                buttonReload.DisableWithTimer(3000);
+                Plugin.Instance.ReloadElements();
             };
+        }
+
+
+        public void EnableMainPanel(bool value)
+        {
+            PanelManager.SetPanelsActive(value);
+            PanelManager.ElementListPanel.SetActive(value);
+            SetActive(value);
         }
 
         private void UpdateUIForSelectedElement()

@@ -8,7 +8,6 @@ using UIBuddy.UI.ScrollView;
 using UIBuddy.UI.ScrollView.Cells;
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEngine.UI.GridLayoutGroup;
 
 namespace UIBuddy.Classes
 {
@@ -35,7 +34,10 @@ namespace UIBuddy.Classes
 
         protected virtual bool ShouldUpdateFocus
         {
-            get => MouseInTargetDisplay && (InputManager.Mouse.Button0 == MouseState.ButtonState.Down || InputManager.Mouse.Button1 == MouseState.ButtonState.Down) && !WasAnyDragging;
+            get => MouseInTargetDisplay &&
+                   (InputManager.Mouse.Button0 == MouseState.ButtonState.Down ||
+                    InputManager.Mouse.Button1 == MouseState.ButtonState.Down) &&
+                   !WasAnyDragging;
         }
 
         public PanelManager()
@@ -153,8 +155,8 @@ namespace UIBuddy.Classes
                         if (MainPanel.SelectedElementPanel != panel)
                         {
                             SelectPanel(panel);
-                            if(panel is not ElementPanel)
-                                panel.RootObject.transform.SetAsLastSibling();
+                            //if(panel is not ElementPanel)
+                            //    panel.RootObject.transform.SetAsLastSibling();
                             break;
                         }
                     }
@@ -221,15 +223,28 @@ namespace UIBuddy.Classes
             _previousMousePosition = mousePos;
             _previousMouseButtonState = state;
 
-            if (!DraggerHandledThisFrame)
+            if (!DraggerHandledThisFrame && MainPanel.IsRootActive)
             {
-                foreach (var instance in _draggers.Where(instance => instance is { IsActive: true }))
+               /* var selected = MainPanel.SelectedElementPanel?.Dragger;
+                if(selected is { IsActive: true } && selected.Panel.IsRootActive)
                 {
-                    if(!instance.Panel.IsRootActive) continue;
-                    instance.Update(state, mousePos);
+                    selected.Update(state, mousePos);
+                }*/
 
-                    if (DraggerHandledThisFrame)
-                        break;
+                if (!DraggerHandledThisFrame)
+                {
+                    //this is where we restrict panel selection for now
+                    foreach (var instance in _draggers.Where(instance =>
+                                 instance.IsActive && ((MainPanel.SelectedElementPanel != null && instance.Panel == MainPanel.SelectedElementPanel) ||
+                                                        instance.Panel == MainPanel ||
+                                                        instance.Panel == ElementListPanel)))
+                    {
+                        if (!instance.Panel.IsRootActive) continue;
+                        instance.Update(state, mousePos);
+
+                        if (DraggerHandledThisFrame)
+                            break;
+                    }
                 }
             }
 
@@ -241,8 +256,11 @@ namespace UIBuddy.Classes
             }
         }
 
-        public void AddDrag(string gameObjectName, string friendlyName = null)
+        public void AddDrag(string gameObjectName, string friendlyName)
         {
+            if(_draggers.FirstOrDefault(a=> a.Panel.Name == friendlyName) != null)
+                return;
+
             var element = new ElementPanel(gameObjectName, friendlyName);
 
             if (element.Initialize())
@@ -276,6 +294,9 @@ namespace UIBuddy.Classes
             }
 
             // select panel
+            var dragger = _draggers.FirstOrDefault(d => d.Panel == panel);
+            _draggers.Remove(dragger);
+            _draggers.Insert(0, dragger);
             panel.SelectPanelAsCurrentlyActive(true);
             MainPanel.SelectedElementPanel = panel as ElementPanel;
         }

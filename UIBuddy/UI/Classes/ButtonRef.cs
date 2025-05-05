@@ -52,4 +52,20 @@ public class ButtonRef
 
         button.onClick.AddListener(new Action(() => { OnClick?.Invoke(); }));
     }
+
+    public void DisableWithTimer(int interval)
+    {
+        Component.interactable = false;
+
+        var timer = new System.Timers.Timer(interval);
+        timer.Elapsed += (sender, e) =>
+        {
+            Component.interactable = true;
+            timer.Stop();
+            timer.Dispose();
+        };
+        timer.AutoReset = false;
+        timer.Enabled = true;
+        timer.Start();
+    }
 }

@@ -25,7 +25,7 @@ public abstract class GenericPanelBase: IGenericPanel
         if(RootObject == null)
             return;
         RootRect = RootObject.GetComponent<RectTransform>();
-        if(RootRect.sizeDelta.x < 25f || RootRect.sizeDelta.y < 25f)
+        if(RootRect.sizeDelta.x < 50f || RootRect.sizeDelta.y < 50f)
             RootRect.sizeDelta = new Vector2(50f, 50f);
         OwnerCanvas = RootObject.GetComponentInParent<Canvas>();
         ReferenceResolution = RootObject.GetComponent<CanvasScaler>()?.referenceResolution ??

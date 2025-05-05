@@ -35,6 +35,7 @@ public static class InitializationPatch
 
         // User has left the server. Reset all ui as the next server might be a different one
         Plugin.Reset();
+        Plugin.IsInitialized = false;
     }
 
     [HarmonyPostfix]

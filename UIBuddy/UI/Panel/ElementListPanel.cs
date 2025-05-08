@@ -115,6 +115,8 @@ namespace UIBuddy.UI.Panel
             yield return null;
 
             CreateTitleBar(RootObject);
+            if(RootRect.anchoredPosition == Vector2.zero)
+                RootRect.anchoredPosition = new Vector2(RootRect.anchoredPosition.x + 350, RootRect.anchoredPosition.y);
             // Activate the UI
             RootObject.SetActive(true);
         }

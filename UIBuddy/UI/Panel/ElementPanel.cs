@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections;
 using HarmonyLib;
-using TMPro;
 using UIBuddy.Classes;
 using UIBuddy.Classes.Behaviors;
-using UIBuddy.UI.Classes;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
@@ -15,18 +13,23 @@ public class ElementPanel: GenericPanelBase
 {
     public bool CanDrag => true;
 
-    public CanvasScaler OwnerCanvasScaler { get; private set; }
-    public Transform Transform { get; set; }
+    public CanvasScaler OwnerCanvasScaler { get; protected set; }
+    public Transform Transform { get; protected set; }
 
-    private RectTransform CustomUIRect { get; set; }
-    private GameObject CustomUIObject { get; set; }
-    private RectOutline Outline { get; set; }
+    protected RectTransform CustomUIRect { get; set; }
+    protected GameObject CustomUIObject { get; set; }
+    protected RectOutline Outline { get; set; }
 
     // Track the original scale to allow proper reset
-    private float _originalScaleFactor;
+    protected float OriginalScaleFactor;
     //private ToggleRef _toggleRef;
 
     public ElementPanel(string gameObjectName, string friendlyName)
+        : base(gameObjectName, friendlyName)
+    {
+    }
+
+    protected ElementPanel(GameObject gameObjectName, string friendlyName) 
         : base(gameObjectName, friendlyName)
     {
     }
@@ -43,10 +46,10 @@ public class ElementPanel: GenericPanelBase
         OwnerCanvasScaler = RootObject.GetComponent<CanvasScaler>();
 
         if (OwnerCanvasScaler != null)
-            _originalScaleFactor = OwnerCanvasScaler.scaleFactor;
+            OriginalScaleFactor = OwnerCanvasScaler.scaleFactor;
         Transform = RootObject.GetComponent<Transform>();
         if(OwnerCanvasScaler == null)
-            _originalScaleFactor = Transform.localScale.x;
+            OriginalScaleFactor = Transform.localScale.x;
 
 
         if(!base.Initialize())
@@ -245,7 +248,7 @@ public class ElementPanel: GenericPanelBase
 
     public void ResetScale()
     {
-        ApplyScale(_originalScaleFactor);
+        ApplyScale(OriginalScaleFactor);
     }
 
     public override void SelectPanelAsCurrentlyActive(bool select)

@@ -8,6 +8,7 @@ namespace UIBuddy.UI.Panel;
 
 public abstract class GenericPanelBase: IGenericPanel
 {
+    public bool IsDetached { get; protected set; }
     public bool IsRootActive => RootObject?.activeSelf ?? false;
     public GameObject RootObject { get; }
     public Vector2 ReferenceResolution { get; set; }
@@ -233,7 +234,10 @@ public abstract class GenericPanelBase: IGenericPanel
         Save();
     }
 
+    public virtual void Update()
+    {
 
+    }
 
     #region Save/Load settings
 
@@ -246,18 +250,19 @@ public abstract class GenericPanelBase: IGenericPanel
         SetSaveDataToConfigValue();
     }
 
-    protected void LoadConfigValues()
+    protected bool LoadConfigValues()
     {
         ApplyingSaveData = true;
         // apply panel save data or revert to default
         try
         {
-            ApplySaveData();
+            return ApplySaveData();
         }
         catch (Exception ex)
         {
             Plugin.Log.LogError($"Exception loading panel save data: {ex}");
             EnsureValidPosition();
+            return false;
         }
         finally
         {
@@ -291,16 +296,16 @@ public abstract class GenericPanelBase: IGenericPanel
         }
     }
 
-    private void ApplySaveData()
+    private bool ApplySaveData()
     {
         var data = Plugin.Instance.Config.Bind("Panels", PanelConfigKey, "", "Serialized panel data").Value;
-        ApplySaveData(data);
+        return ApplySaveData(data);
     }
 
-    private void ApplySaveData(string data)
+    private bool ApplySaveData(string data)
     {
         if (string.IsNullOrEmpty(data))
-            return;
+            return false;
         string[] split = data.Split('|');
 
         try
@@ -321,7 +326,10 @@ public abstract class GenericPanelBase: IGenericPanel
             //SetDefaultSizeAndPosition();
             EnsureValidPosition();
             SetSaveDataToConfigValue();
+            return false;
         }
+
+        return true;
     }
 
     #endregion

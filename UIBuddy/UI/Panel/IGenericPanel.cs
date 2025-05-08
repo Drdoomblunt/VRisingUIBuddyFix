@@ -16,5 +16,6 @@ namespace UIBuddy.UI.Panel
         void SetActive(bool value);
         void SetRootActive(bool value);
         void Dispose();
+        void Update();
     }
 }

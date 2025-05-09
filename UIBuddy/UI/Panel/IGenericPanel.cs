@@ -12,7 +12,7 @@ namespace UIBuddy.UI.Panel
         string Name { get; }
         float GetOwnerScaleFactor();
         void EnsureValidPosition();
-        void SelectPanelAsCurrentlyActive(bool select);
+        void ShowPanelOutline(bool select);
         void SetActive(bool value);
         void SetRootActive(bool value);
         void Dispose();

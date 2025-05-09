@@ -49,7 +49,7 @@ public static class RectExtensions
     internal static string RectRotationToString(this RectTransform rect)
     {
         if (!rect)
-            throw new ArgumentNullException("rect");
+            throw new ArgumentNullException(nameof(rect));
 
         return string.Format(CultureInfo.InvariantCulture, "{0},{1},{2},{3}", new object[]
         {
@@ -57,10 +57,18 @@ public static class RectExtensions
         });
     }
 
+    internal static string RectScaleToString(this RectTransform rect)
+    {
+        if (!rect)
+            throw new ArgumentNullException(nameof(rect));
+
+        return rect.localScale.x.ToString(CultureInfo.InvariantCulture);
+    }
+
     internal static void SetPositionFromString(this RectTransform rect, string stringPosition)
     {
         if (string.IsNullOrEmpty(stringPosition))
-            throw new ArgumentNullException(stringPosition);
+            throw new ArgumentNullException(nameof(stringPosition));
 
         string[] split = stringPosition.Split(',');
 
@@ -76,7 +84,7 @@ public static class RectExtensions
     internal static void SetRotationFromString(this RectTransform rect, string stringRotation)
     {
         if (string.IsNullOrEmpty(stringRotation))
-            throw new ArgumentNullException(stringRotation);
+            throw new ArgumentNullException(nameof(stringRotation));
 
         string[] split = stringRotation.Split(',');
 
@@ -89,6 +97,15 @@ public static class RectExtensions
         vector.z = float.Parse(split[2], CultureInfo.InvariantCulture);
         vector.w = float.Parse(split[3], CultureInfo.InvariantCulture);
         rect.rotation = vector;
+    }
+
+    internal static void SetScaleFromString(this RectTransform rect, string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            throw new ArgumentNullException(value);
+
+        var floatValue = float.Parse(value, CultureInfo.InvariantCulture);
+        rect.localScale = new Vector3(floatValue, floatValue, 1f);
     }
 
     internal static void SetPivot(this RectTransform rect, Vector2 pivot)

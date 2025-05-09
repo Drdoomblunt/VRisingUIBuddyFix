@@ -214,13 +214,13 @@ public abstract class GenericPanelBase: IGenericPanel
 
     #endregion
 
-    public virtual void SelectPanelAsCurrentlyActive(bool select)
+    public virtual void ShowPanelOutline(bool select)
     {
     }
 
     public virtual void SetActive(bool value)
     {
-        RootObject.SetActive(value);
+        RootObject?.SetActive(value);
     }
 
     public virtual void SetRootActive(bool value)
@@ -247,7 +247,7 @@ public abstract class GenericPanelBase: IGenericPanel
 
     private string PanelConfigKey => $"{Name}".Replace("'", "").Replace("\"", "").Replace(" ","_");
 
-    public void Save()
+    protected void Save()
     {
         if (ApplyingSaveData) return;
 
@@ -260,7 +260,7 @@ public abstract class GenericPanelBase: IGenericPanel
         // apply panel save data or revert to default
         try
         {
-            return ApplySaveData();
+            return ApplyLoadedData();
         }
         catch (Exception ex)
         {
@@ -290,7 +290,8 @@ public abstract class GenericPanelBase: IGenericPanel
                 RootRect.RectAnchorsToString(),
                 RootRect.RectPositionToString(),
                 RootRect.RectRotationToString(),
-                IsPinned.ToString()
+                IsPinned.ToString(),
+                RootRect.RectScaleToString(),
             });
         }
         catch (Exception ex)
@@ -300,13 +301,13 @@ public abstract class GenericPanelBase: IGenericPanel
         }
     }
 
-    private bool ApplySaveData()
+    private bool ApplyLoadedData()
     {
         var data = Plugin.Instance.Config.Bind("Panels", PanelConfigKey, "", "Serialized panel data").Value;
-        return ApplySaveData(data);
+        return ApplyLoadedData(data);
     }
 
-    private bool ApplySaveData(string data)
+    private bool ApplyLoadedData(string data)
     {
         if (string.IsNullOrEmpty(data))
             return false;
@@ -319,6 +320,8 @@ public abstract class GenericPanelBase: IGenericPanel
             RootRect.SetAnchorsFromString(split[1]);
             RootRect.SetPositionFromString(split[2]);
             RootRect.SetRotationFromString(split[3]);
+            // IsPinned 4
+            RootRect.SetScaleFromString(split[5]);
 
             if (IsDetached)
             {
@@ -341,7 +344,7 @@ public abstract class GenericPanelBase: IGenericPanel
 
     #endregion
 
-    public static GameObject FindInHierarchy(string path)
+    protected static GameObject FindInHierarchy(string path)
     {
         if (string.IsNullOrEmpty(path))
             return null;

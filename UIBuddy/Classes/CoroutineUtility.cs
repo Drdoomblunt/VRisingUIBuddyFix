@@ -12,6 +12,11 @@ public static class CoroutineUtility
         _nextFrameRoutines.Add(coroutine);
     }
 
+    public static void Start(this IEnumerator routine)
+    {
+        StartCoroutine(routine);
+    }
+
     public static void TickRoutines()
     {
         // Next frame is now!

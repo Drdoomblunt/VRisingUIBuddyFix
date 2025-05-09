@@ -3,7 +3,7 @@ using HarmonyLib;
 
 namespace UIBuddy.Patches;
 
-static class Keybindings
+static class KeybindingPatch
 {
 #nullable disable
     private static Harmony _harmony;
@@ -14,10 +14,10 @@ static class Keybindings
     {
         if (!Plugin.IsClient) return;
 
-        _harmony = Harmony.CreateAndPatchAll(typeof(Keybindings));
+        _harmony = Harmony.CreateAndPatchAll(typeof(KeybindingPatch));
     }
 
-    public static void Uninitialize()
+    public static void Deinitialize()
     {
         if (!Plugin.IsClient) return;
 

@@ -6,6 +6,7 @@ using UIBuddy.UI.Classes;
 using UIBuddy.UI.Panel;
 using UnityEngine;
 using UnityEngine.UI;
+using Object = System.Object;
 
 namespace UIBuddy.Classes
 {
@@ -38,8 +39,51 @@ namespace UIBuddy.Classes
         {
             Instance = this;
             CreateRootCanvas();
-            CreateMainPanel();
             CreateElementListPanel();
+            CreateMainPanel();
+        }
+
+        public static void ReloadElements()
+        {
+            AddDrag("BloodOrbParent", "Blood Orb HP", "ORB");
+            //AddDetachedDrag("BottomBar(Clone)|Content|TooltipParent|BloodPoolTooltip", "Blood Orb Tooltip Anchor", "BOTA");
+
+            AddDrag("JournalParent(Clone)", "Journal", "JOU");
+            AddDrag("TargetInfoPanel(Clone)", "Target Info", "TGT");
+
+            AddDrag("ClockParent3(Clone)|Content|Parent", "DayNight sphere", "SPHERE"); //daytime circle
+            AddDrag("MiniMapParent(Clone)|Root|Panel", "Minimap", "MAP"); //minimap
+            AddDrag("BackgroundBig", "Clock+Minimap Background", "Background"); //clock/minimap background
+
+            AddDrag("BottomBar(Clone)", "Full Bottom Bar", "FBB"); //bottom bar
+            AddDrag("BottomBar(Clone)|Content|Background|Background", "Bottom Bar Fade", "BBF"); //bottom bar fade
+            AddDrag("BottomBar(Clone)|Content|Background|DarkFade", "Bottom Bar Background", "BBB"); //bottom bar bg
+            AddDetachedDrag("BottomBar(Clone)|Content|Background|ActionBar", "Action Bar", "ACBAR"); //action bar
+            AddDetachedDrag("BottomBar(Clone)|Content|Background|AbilityBar", "Ability Bar", "ABBAR"); //abilityBar bar
+
+            AddDrag("BottomBar(Clone)|Content|Background|ActionBar|ActionBarEntry", "Action Bar Button 1", "ACB1"); //ab1
+            AddDrag("BottomBar(Clone)|Content|Background|ActionBar|ActionBarEntry (1)", "Action Bar Button 2", "ACB2"); //ab2
+            AddDrag("AbilityBarEntry_Primary", "AB primary", "ABP");
+
+            AddDrag("Buffs", "Buffs", "BUFF");
+            AddDrag("Debuffs", "Debuffs", "DBUFF");
+
+            AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|HUDAlertParent(Clone)|Container", "(?)Right Alerts", "RA"); //right alerts
+            AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|DangerTextParent(Clone)", "(!!)Bottom Danger", "DANGER"); //bottom danger text
+            //var chatPanel = _pm.AddDetachedDrag("HUDChatParent|ChatWindow(Clone)|Content", "Chat Window", "CHAT"); //chat
+            //chatPanel?.SetParameters(positionValidation: false, initialPosition: new Vector2(500,500));
+
+            //AddDrag("Version_HUD", "Clan Members");
+            //AddDrag("HUDClan", "Clan Members", "CLAN"); //clan
+            // _pm.AddDrag("HUDTutorial"); //tutorial
+            // _pm.AddDrag("HUDRecipeTrackerParent"); //recipe tracker
+
+
+            /*_pm.AddDrag("SLS logo");
+            _pm.AddDrag("NewsPanelParent");
+            _pm.AddDrag("SideBar");
+            _pm.AddDrag("LinksParentNode");*/
+            // _pm.AddDrag(null);
         }
 
         private static void CreateElementListPanel()
@@ -133,32 +177,21 @@ namespace UIBuddy.Classes
             if (!_focusHandledThisFrame)
             {
                 var mousePos = InputManager.Mouse.Position;
-   
-                var panelsThroughClick = DraggersList.Where(a =>
-                        a.Panel.IsRootActive &&
-                        a.Panel.RootRect.rect.Contains(a.Panel.RootRect.InverseTransformPoint(mousePos)))
-                    .Select(a => a.Panel).ToList();
-
-                if (panelsThroughClick.Count > 1)
+                var dragger = DraggersList
+                    .FirstOrDefault(a => a.Panel.IsRootActive &&
+                                         a.Panel.RootRect.rect.Contains(a.Panel.RootRect.InverseTransformPoint(mousePos)));
+                
+                if (dragger?.Panel != null)
                 {
-                    var filteredPanels = panelsThroughClick.Where(panel => MainPanel.SelectedElementPanel != panel)
-                        .ToArray();
-                    var panel = filteredPanels.FirstOrDefault();
-                    SelectPanel(panel);
-                    var dragger = DraggersList.FirstOrDefault(d => d.Panel == panel);
-                    DraggersList.Remove(dragger);
-                    DraggersList.Add(dragger);
-                }
-                else
-                {
-                    var panel = panelsThroughClick.FirstOrDefault();
-                    if (panel != null)
+                    if (!IsControlPanel(dragger.Panel))
                     {
-                        SelectPanel(panel);
-                        //if(panel is not ElementPanel)
-                        //    panel.RootObject.transform.SetAsLastSibling();
+                        SelectPanel(dragger.Panel);
+                        ElementListPanel.UpdateSelectedEntry(dragger.Panel);
+                        DraggersList.Remove(dragger);
+                        DraggersList.Add(dragger);
                     }
                 }
+
                 _focusHandledThisFrame = true;
             }
 
@@ -166,7 +199,7 @@ namespace UIBuddy.Classes
             //    OnClickedOutsidePanels?.Invoke();
         }
 
-        private static bool IsControlPanelSelected()
+        private static bool IsControlPanelMouseOver()
         {
             var mousePos = InputManager.Mouse.Position;
             var dragPos = MainPanel.RootRect.InverseTransformPoint(mousePos);
@@ -179,6 +212,11 @@ namespace UIBuddy.Classes
                 return true;
 
             return false;
+        }
+
+        private static bool IsControlPanel(IGenericPanel panel)
+        {
+            return panel == MainPanel || panel == ElementListPanel;
         }
 
         protected virtual void UpdateDraggers()
@@ -208,16 +246,15 @@ namespace UIBuddy.Classes
                             instance.IsActive &&
                             ((MainPanel.SelectedElementPanel != null &&
                               instance.Panel == MainPanel.SelectedElementPanel) ||
-                             instance.Panel == MainPanel ||
-                             instance.Panel == ElementListPanel)))
+                             IsControlPanel(instance.Panel))))
                {
                    if (!instance.Panel.IsRootActive) continue;
 
-                   if (instance.Panel == MainPanel.SelectedElementPanel && IsControlPanelSelected() && !WasAnyDragging)
+                   /*if (instance.Panel == MainPanel.SelectedElementPanel && IsControlPanelMouseOver() && !WasAnyDragging)
                    {
                        DraggerHandledThisFrame = true;
                        break;
-                   }
+                   }*/
 
                    instance.Update(state, mousePos);
 
@@ -235,12 +272,12 @@ namespace UIBuddy.Classes
             }
         }
 
-        public static void AddDrag(string gameObjectName, string friendlyName)
+        public static void AddDrag(string gameObjectName, string friendlyName, string shortName = null)
         {
             if(DraggersList.FirstOrDefault(a=> a.Panel.Name == friendlyName) != null)
                 return;
 
-            var element = new ElementPanel(gameObjectName, friendlyName);
+            var element = new ElementPanel(gameObjectName, friendlyName, shortName);
 
             if (element.Initialize())
             {
@@ -272,6 +309,8 @@ namespace UIBuddy.Classes
             foreach (var panel in DraggersList.Select(a=> a.Panel))
                 panel.Dispose();
             DraggersList.Clear();
+            UnityEngine.Object.Destroy(CanvasRoot);
+            UnityEngine.Object.Destroy(PoolHolder);
         }
 
         public static void SelectPanel(IGenericPanel panel)
@@ -281,7 +320,7 @@ namespace UIBuddy.Classes
 
             // clear all panels outline
             foreach (var drag in DraggersList)
-                drag.Panel.SelectPanelAsCurrentlyActive(false);
+                drag.Panel.ShowPanelOutline(false);
             
             // do not select inactive panel
             if (!panel.IsRootActive)
@@ -294,7 +333,7 @@ namespace UIBuddy.Classes
             var dragger = DraggersList.FirstOrDefault(d => d.Panel == panel);
             DraggersList.Remove(dragger);
             DraggersList.Insert(0, dragger);
-            panel.SelectPanelAsCurrentlyActive(true);
+            panel.ShowPanelOutline(true);
             MainPanel.SelectedElementPanel = panel as ElementPanel;
         }
 

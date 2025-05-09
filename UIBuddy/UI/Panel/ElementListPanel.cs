@@ -146,7 +146,7 @@ namespace UIBuddy.UI.Panel
         {
             var data = _dataList[dataIndex];
             PanelManager.SelectPanel(data.Panel);
-            UpdateSelectedEntry(dataIndex);
+            UpdateSelectedEntry(data.Panel);
         }
 
         private bool ShouldDisplay(ElementPanelData data, string filter) => true;
@@ -167,17 +167,18 @@ namespace UIBuddy.UI.Panel
                 data.Panel.SetRootActive(value);
                 if(value)
                     PanelManager.SelectPanel(data.Panel);
-                else data.Panel.SelectPanelAsCurrentlyActive(false);
+                else data.Panel.ShowPanelOutline(false);
 
-                UpdateSelectedEntry(value ? index : -1);
+                UpdateSelectedEntry(value ? data.Panel : null);
             };
         }
 
-        public void UpdateSelectedEntry(int dataIndex)
+        public void UpdateSelectedEntry(IGenericPanel panel)
         {
+            var dataIndex = panel == null ? -1 : _dataList.FindIndex(a => a.Panel == panel);
             _scrollPool.CellPool.ForEach(a =>
             {
-                if(a.CurrentDataIndex == dataIndex && dataIndex != -1)
+                if (a.CurrentDataIndex == dataIndex && dataIndex != -1)
                     a.Button.ButtonText.color = Color.yellow;
                 else a.Button.ButtonText.color = Theme.DefaultText;
             });

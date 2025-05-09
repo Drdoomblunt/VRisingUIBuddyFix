@@ -1,12 +1,9 @@
-﻿using FMOD;
-using HarmonyLib;
-using ProjectM.EOS;
+﻿using HarmonyLib;
 using ProjectM;
 using ProjectM.UI;
 using System;
 using TMPro;
 using UIBuddy.UI;
-using UnityEngine;
 
 namespace UIBuddy.Patches;
 
@@ -50,9 +47,9 @@ public static class InitializationPatch
     {
         if (!Plugin.IsInitialized) return;
 
-        // User has left the server. Reset all ui as the next server might be a different one
-        Plugin.Reset();
+        // User has left the server. Reset all ui
         Plugin.IsInitialized = false;
+        Plugin.Reset();
     }
 
     [HarmonyPostfix]

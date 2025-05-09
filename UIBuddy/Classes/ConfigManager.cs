@@ -22,10 +22,12 @@ namespace UIBuddy.Classes
 
         public static void Initialize()
         {
+            if(_cfgSelectPanelsWithMouse != null) return;
+
             _cfgSelectPanelsWithMouse = Plugin.Instance.Config.Bind<bool>(CATEGORY_SETTINGS, nameof(SelectPanelsWithMouse), false,
                 "Enable selecting panels with mouse");
 
-            _cfgIsModVisible = Plugin.Instance.Config.Bind<bool>(CATEGORY_SETTINGS, nameof(SelectPanelsWithMouse), true,
+            _cfgIsModVisible = Plugin.Instance.Config.Bind<bool>(CATEGORY_SETTINGS, nameof(IsModVisible), true,
                 "Are mod panels visible");
         }
     }

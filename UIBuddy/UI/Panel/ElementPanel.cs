@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using HarmonyLib;
+using TMPro;
 using UIBuddy.Classes;
 using UIBuddy.Classes.Behaviors;
 using UnityEngine;
@@ -23,10 +24,12 @@ public class ElementPanel: GenericPanelBase
     // Track the original scale to allow proper reset
     protected float OriginalScaleFactor;
     //private ToggleRef _toggleRef;
+    private readonly string _shortName;
 
-    public ElementPanel(string gameObjectName, string friendlyName)
+    public ElementPanel(string gameObjectName, string friendlyName, string shortName)
         : base(gameObjectName, friendlyName)
     {
+        _shortName = shortName;
     }
 
     protected ElementPanel(GameObject gameObjectName, string friendlyName) 
@@ -61,9 +64,9 @@ public class ElementPanel: GenericPanelBase
     protected override void ConstructUI()
     {
         // Get or add RectTransform
-        RootObject.SetActive(false);
         CustomUIObject = UIFactory.CreateUIObject($"MarkPanel_{Name}", RootObject);
         CustomUIRect = CustomUIObject.GetComponent<RectTransform>();
+        CustomUIObject.SetActive(false);
 
         // Set anchors manually using individual values instead of Vector2
         CustomUIRect.anchorMin = new Vector2(0, 0);
@@ -77,7 +80,6 @@ public class ElementPanel: GenericPanelBase
         bgImage.color = Theme.PanelBackground;
 
         CoroutineUtility.StartCoroutine(SafeCreateContent());
-
     }
 
     private IEnumerator SafeCreateContent()
@@ -94,93 +96,49 @@ public class ElementPanel: GenericPanelBase
                 {
                     Outline.OutlineColor = Theme.ElementOutlineColor;
                     Outline.LineWidth = 2f; // Adjust as needed
-                    Outline.SetActive(false);
                 }
 
-                // Create a header container at the top of the panel
-                /*var headerContainer = UIFactory.CreateUIObject($"HeaderContainer_{Name}", CustomUIObject);
-                if (headerContainer != null)
+                if (!string.IsNullOrEmpty(_shortName))
                 {
-                    var headerRect = headerContainer.GetComponent<RectTransform>();
-                    if (headerRect != null)
+                    // Create a header container at the top of the panel
+                    var headerContainer = UIFactory.CreateUIObject($"HeaderContainer_{Name}", CustomUIObject);
+                    if (headerContainer != null)
                     {
-                        headerRect.anchorMin = new Vector2(0, 1);
-                        headerRect.anchorMax = new Vector2(1, 1);
-                        headerRect.pivot = new Vector2(0.5f, 1);
-                        headerRect.sizeDelta = new Vector2(0, 30); // Fixed height
-                        headerRect.anchoredPosition = Vector2.zero;
-                    }
-
-                    // Create the label with maximum width
-                    var label = UIFactory.CreateLabel(headerContainer, $"NameLabel_{Name}", Name,
-                        alignment: TextAlignmentOptions.Left,
-                        fontSize: 12);
-
-                    if (label != null && label.GameObject != null)
-                    {
-                        // Make the label take most of the width
-                        var labelRect = label.GameObject.GetComponent<RectTransform>();
-                        if (labelRect != null)
+                        var headerRect = headerContainer.GetComponent<RectTransform>();
+                        if (headerRect != null)
                         {
-                            labelRect.anchorMin = new Vector2(0, 0);
-                            labelRect.anchorMax = new Vector2(0.9f, 1);
-                            labelRect.pivot = new Vector2(0, 0.5f);
-                            labelRect.anchoredPosition = new Vector2(10, 0);
-                            labelRect.sizeDelta = Vector2.zero;
-                        }
-                    }
-
-                    // Create toggle in top-right corner using UIFactory
-                    var toggleContainer = UIFactory.CreateUIObject($"ToggleContainer_{Name}", headerContainer);
-                    if (toggleContainer != null)
-                    {
-                        var toggleContainerRect = toggleContainer.GetComponent<RectTransform>();
-                        if (toggleContainerRect != null)
-                        {
-                            toggleContainerRect.anchorMin = new Vector2(0.9f, 0);
-                            toggleContainerRect.anchorMax = new Vector2(1, 1);
-                            toggleContainerRect.pivot = new Vector2(1, 0.5f);
-                            toggleContainerRect.anchoredPosition = new Vector2(-10, 0);
-                            toggleContainerRect.sizeDelta = Vector2.zero;
+                            headerRect.anchorMin = new Vector2(0, 1);
+                            headerRect.anchorMax = new Vector2(1, 1);
+                            headerRect.pivot = new Vector2(0.5f, 1);
+                            headerRect.sizeDelta = new Vector2(0, 30); // Fixed height
+                            headerRect.anchoredPosition = Vector2.zero;
                         }
 
-                        // Use UIFactory to create the toggle
-                        _toggleRef = UIFactory.CreateToggle(toggleContainer, $"EnableToggle_{Name}");
-                        if (_toggleRef != null)
+                        // Create the label with maximum width
+                        var label = UIFactory.CreateLabel(headerContainer, $"NameLabel_{_shortName}", _shortName,
+                            alignment: TextAlignmentOptions.Left,
+                            fontSize: 12);
+
+                        if (label != null && label.GameObject != null)
                         {
-                            // Hide the text
-                            if (_toggleRef.Text != null)
+                            // Make the label take most of the width
+                            var labelRect = label.GameObject.GetComponent<RectTransform>();
+                            if (labelRect != null)
                             {
-                                _toggleRef.Text.text = "";
-                            }
-
-                            // Set the value change handler
-                            _toggleRef.OnValueChanged += value =>
-                            {
-                                if (RootObject != null)
-                                {
-                                    RootObject.SetActive(value);
-                                    //on hide we should update all related controls
-                                    if (!value && PanelManager.MainPanel.SelectedElementPanel == this)
-                                    {
-                                        PanelManager.MainPanel.SelectedElementPanel = null;
-                                        SelectPanelAsCurrentlyActive(false);
-                                    }
-
-                                    PanelManager.ElementListPanel.UpdateElement(this);
-                                }
-                            };
-
-                            if (_toggleRef.Toggle != null)
-                            {
-                                _toggleRef.Toggle.isOn = true; // Default value
+                                labelRect.anchorMin = new Vector2(0, 0);
+                                labelRect.anchorMax = new Vector2(0.9f, 1);
+                                labelRect.pivot = new Vector2(0, 0.5f);
+                                labelRect.anchoredPosition = new Vector2(10, 0);
+                                labelRect.sizeDelta = Vector2.zero;
                             }
                         }
                     }
-                }*/
+                }
+
                 // Activate the UI
-                if(ConfigManager.IsModVisible)
+                if (ConfigManager.IsModVisible)
                     CustomUIObject.SetActive(true);
+                Outline?.SetActive(false);
 
                 LoadConfigValues();
             }
@@ -253,7 +211,7 @@ public class ElementPanel: GenericPanelBase
         ApplyScale(OriginalScaleFactor);
     }
 
-    public override void SelectPanelAsCurrentlyActive(bool select)
+    public override void ShowPanelOutline(bool select)
     {
         if (Outline == null || !RootObject.activeSelf) return;
         Outline.SetActive(select);

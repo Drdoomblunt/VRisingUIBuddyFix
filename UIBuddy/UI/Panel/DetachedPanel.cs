@@ -10,8 +10,9 @@ namespace UIBuddy.UI.Panel;
 
 public class DetachedPanel: ElementPanel
 {
-    public GameObject TargetObject { get; }
-    public RectTransform TargetRect { get; }
+    private GameObject TargetObject { get; }
+    private RectTransform TargetRect { get; }
+    private const float TOLERANCE = 0.001f;
 
     private Vector2 _oldPosition = Vector2.zero;
     private Vector3 _oldScale = Vector3.one;
@@ -84,7 +85,7 @@ public class DetachedPanel: ElementPanel
             Save();
     }
 
-    public void EnsureValidPositionEx()
+    private void EnsureValidPositionEx()
     {
         if (RootRect == null || ReferenceResolution == Vector2.zero)
             return;
@@ -208,8 +209,6 @@ public class DetachedPanel: ElementPanel
         }
     }
 
-    private const float TOLERANCE = 0.001f;
-
     public override bool Initialize()
     {
         if (RootObject == null)
@@ -269,39 +268,41 @@ public class DetachedPanel: ElementPanel
                 {
                     Outline.OutlineColor = Theme.ElementOutlineColor;
                     Outline.LineWidth = 2f; // Adjust as needed
-                    Outline.SetActive(false);
                 }
 
-                // Create a header container at the top of the panel
-                var headerContainer = UIFactory.CreateUIObject($"HeaderContainer_{Name}", CustomUIObject);
-                if (headerContainer != null)
+                if (!string.IsNullOrEmpty(_shortName))
                 {
-                    var headerRect = headerContainer.GetComponent<RectTransform>();
-                    if (headerRect != null)
+                    // Create a header container at the top of the panel
+                    var headerContainer = UIFactory.CreateUIObject($"HeaderContainer_{Name}", CustomUIObject);
+                    if (headerContainer != null)
                     {
-                        headerRect.anchorMin = new Vector2(0, 1);
-                        headerRect.anchorMax = new Vector2(1, 1);
-                        headerRect.pivot = new Vector2(0.5f, 1);
-                        headerRect.sizeDelta = new Vector2(0, 30); // Fixed height
-                        headerRect.anchoredPosition = Vector2.zero;
-                    }
-
-                    // Create the label with maximum width
-                    var label = UIFactory.CreateLabel(headerContainer, $"NameLabel_{Name}", _shortName,
-                        alignment: TextAlignmentOptions.Left,
-                        fontSize: 12);
-
-                    if (label != null && label.GameObject != null)
-                    {
-                        // Make the label take most of the width
-                        var labelRect = label.GameObject.GetComponent<RectTransform>();
-                        if (labelRect != null)
+                        var headerRect = headerContainer.GetComponent<RectTransform>();
+                        if (headerRect != null)
                         {
-                            labelRect.anchorMin = new Vector2(0, 0);
-                            labelRect.anchorMax = new Vector2(0.9f, 1);
-                            labelRect.pivot = new Vector2(0, 0.5f);
-                            labelRect.anchoredPosition = new Vector2(10, 0);
-                            labelRect.sizeDelta = Vector2.zero;
+                            headerRect.anchorMin = new Vector2(0, 1);
+                            headerRect.anchorMax = new Vector2(1, 1);
+                            headerRect.pivot = new Vector2(0.5f, 1);
+                            headerRect.sizeDelta = new Vector2(0, 30); // Fixed height
+                            headerRect.anchoredPosition = Vector2.zero;
+                        }
+
+                        // Create the label with maximum width
+                        var label = UIFactory.CreateLabel(headerContainer, $"NameLabel_{_shortName}", _shortName,
+                            alignment: TextAlignmentOptions.Left,
+                            fontSize: 12);
+
+                        if (label != null && label.GameObject != null)
+                        {
+                            // Make the label take most of the width
+                            var labelRect = label.GameObject.GetComponent<RectTransform>();
+                            if (labelRect != null)
+                            {
+                                labelRect.anchorMin = new Vector2(0, 0);
+                                labelRect.anchorMax = new Vector2(0.9f, 1);
+                                labelRect.pivot = new Vector2(0, 0.5f);
+                                labelRect.anchoredPosition = new Vector2(10, 0);
+                                labelRect.sizeDelta = Vector2.zero;
+                            }
                         }
                     }
                 }
@@ -309,8 +310,9 @@ public class DetachedPanel: ElementPanel
                 // Activate the UI
                 if(ConfigManager.IsModVisible)
                     CustomUIObject.SetActive(true);
+                Outline?.SetActive(false);
 
-                if(LoadConfigValues())
+                if (LoadConfigValues())
                     TargetRect.anchoredPosition = RootRect.anchoredPosition;
 
                 RootRect.sizeDelta = new Vector2(50f, 50f);

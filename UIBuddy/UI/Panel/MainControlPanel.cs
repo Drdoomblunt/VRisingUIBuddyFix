@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UIBuddy.Classes;
+using UIBuddy.UI.Classes;
 
 namespace UIBuddy.UI.Panel
 {
@@ -19,6 +20,7 @@ namespace UIBuddy.UI.Panel
         private ElementPanel _selectedElementPanel;
         private bool _updatingUI = false;
         private GameObject _titleBar;
+        private ToggleRef _closeToggleRef;
 
         // Properties
         public ElementPanel SelectedElementPanel
@@ -139,7 +141,7 @@ namespace UIBuddy.UI.Panel
             {
                 EnableMainPanel(value);
             };
-            toggleRef.Toggle.isOn = true;
+            toggleRef.Toggle.isOn = ConfigManager.IsModVisible;
         }
 
         private void CreateNameRow(GameObject parent)
@@ -263,14 +265,14 @@ namespace UIBuddy.UI.Panel
 
             UIFactory.SetLayoutElement(row, minHeight: 30, preferredHeight: 30);
 
-            var toggleRef = UIFactory.CreateToggle(row, $"EnableCheckFocus_{nameof(MainControlPanel)}");
-            toggleRef.OnValueChanged += (value) =>
+            _closeToggleRef = UIFactory.CreateToggle(row, $"EnableCheckFocus_{nameof(MainControlPanel)}");
+            _closeToggleRef.OnValueChanged += (value) =>
             {
                 ConfigManager.SelectPanelsWithMouse = value;
             };
-            toggleRef.Toggle.isOn = ConfigManager.SelectPanelsWithMouse; // Default value
-            toggleRef.Text.text = "Select panels with mouse";
-            toggleRef.Text.fontSize = 16;
+            _closeToggleRef.Toggle.isOn = ConfigManager.SelectPanelsWithMouse; // Default value
+            _closeToggleRef.Text.text = "Select panels with mouse";
+            _closeToggleRef.Text.fontSize = 16;
 
 
         }
@@ -293,16 +295,18 @@ namespace UIBuddy.UI.Panel
             buttonReload.OnClick += () =>
             {
                 buttonReload.DisableWithTimer(3000);
-                Plugin.Instance.ReloadElements();
+                PanelManager.ReloadElements();
             };
         }
 
 
         public void EnableMainPanel(bool value)
         {
+            if(RootObject == null) return;
             PanelManager.SetPanelsActive(value);
             PanelManager.ElementListPanel.SetActive(value);
-            SetActive(value);
+            base.SetActive(value);
+            ConfigManager.IsModVisible = value;
         }
 
         private void UpdateUIForSelectedElement()
@@ -458,5 +462,10 @@ namespace UIBuddy.UI.Panel
         }
 
         #endregion
+
+        public override void SetActive(bool value)
+        {
+            _closeToggleRef.Toggle.isOn = value;
+        }
     }
 }

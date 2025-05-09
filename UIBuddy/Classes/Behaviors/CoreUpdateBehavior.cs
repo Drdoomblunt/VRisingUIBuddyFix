@@ -27,6 +27,9 @@ public class CoreUpdateBehavior : MonoBehaviour
     protected void Update()
     {
         CoroutineUtility.TickRoutines();
+
+        if(!Plugin.IsInitialized) return;
+
         InputFieldRef.UpdateInstances();
         UIBehaviourModel.UpdateInstances();
 

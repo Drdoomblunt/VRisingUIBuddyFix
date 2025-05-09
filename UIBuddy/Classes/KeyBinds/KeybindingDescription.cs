@@ -25,6 +25,10 @@ public struct KeybindingDescription
 
     public string Description;
 
+    public LocalizationKey DescriptionKey { get; set; }
+
+    public LocalizationKey NameKey { get; set; }
+
     /// <summary>
     /// The default keycode for this keybinding. Use KeyCode.NONE if you do not
     /// want the keybinding to be bound by default. The secondary keybinding will
@@ -43,8 +47,4 @@ public struct KeybindingDescription
         NameKey = LocalizationManager.AddKey(Name);
         DescriptionKey = LocalizationManager.AddKey(Description);
     }
-
-    public LocalizationKey DescriptionKey { get; set; }
-
-    public LocalizationKey NameKey { get; set; }
 }

@@ -38,6 +38,6 @@ internal static class KeybindingManager
     private static void ShowMainKb_KeyPressed()
     {
         if (!Plugin.IsInitialized) return;
-        PanelManager.MainPanel.EnableMainPanel(!PanelManager.MainPanel.IsRootActive);
+        PanelManager.MainPanel.ToggleMainPanel();
     }
 }

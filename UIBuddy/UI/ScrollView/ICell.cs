@@ -10,5 +10,6 @@ public interface ICell : IPooledObject
     RectTransform Rect { get; set; }
 
     void Enable();
+
     void Disable();
 }

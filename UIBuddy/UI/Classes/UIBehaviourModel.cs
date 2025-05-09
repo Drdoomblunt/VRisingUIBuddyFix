@@ -47,7 +47,7 @@ public abstract class UIBehaviourModel : UIModel
     {
     }
 
-    public override void Destroy()
+    protected override void Destroy()
     {
         if (Instances.Contains(this))
             Instances.Remove(this);

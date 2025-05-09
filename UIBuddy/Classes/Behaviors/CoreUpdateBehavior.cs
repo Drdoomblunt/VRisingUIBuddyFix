@@ -23,7 +23,6 @@ public class CoreUpdateBehavior : MonoBehaviour
             Destroy(_obj);
     }
 
-
     protected void Update()
     {
         CoroutineUtility.TickRoutines();

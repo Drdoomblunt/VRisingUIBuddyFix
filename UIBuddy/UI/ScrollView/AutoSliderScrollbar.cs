@@ -11,7 +11,7 @@ namespace UIBuddy.UI.ScrollView;
 /// </summary>
 public class AutoSliderScrollbar : UIBehaviourModel
 {
-    public override GameObject UIRoot
+    protected override GameObject UIRoot
     {
         get
         {
@@ -25,6 +25,11 @@ public class AutoSliderScrollbar : UIBehaviourModel
     public Scrollbar Scrollbar { get; }
     public RectTransform ContentRect { get; }
     public RectTransform ViewportRect { get; }
+
+    private float _lastAnchorPosition;
+    private float _lastContentHeight;
+    private float _lastViewportHeight;
+    private bool _refreshWanted;
 
     public AutoSliderScrollbar(Scrollbar scrollbar, Slider slider, RectTransform contentRect, RectTransform viewportRect)
     {
@@ -41,30 +46,25 @@ public class AutoSliderScrollbar : UIBehaviourModel
         UpdateSliderHandle();
     }
 
-    private float lastAnchorPosition;
-    private float lastContentHeight;
-    private float lastViewportHeight;
-    private bool _refreshWanted;
-
     public override void Update()
     {
         if (!Enabled)
             return;
 
         _refreshWanted = false;
-        if (Math.Abs(ContentRect.localPosition.y - lastAnchorPosition) > 0.0001)
+        if (Math.Abs(ContentRect.localPosition.y - _lastAnchorPosition) > 0.0001)
         {
-            lastAnchorPosition = ContentRect.localPosition.y;
+            _lastAnchorPosition = ContentRect.localPosition.y;
             _refreshWanted = true;
         }
-        if (Math.Abs(ContentRect.rect.height - lastContentHeight) > 0.0001)
+        if (Math.Abs(ContentRect.rect.height - _lastContentHeight) > 0.0001)
         {
-            lastContentHeight = ContentRect.rect.height;
+            _lastContentHeight = ContentRect.rect.height;
             _refreshWanted = true;
         }
-        if (Math.Abs(ViewportRect.rect.height - lastViewportHeight) > 0.0001)
+        if (Math.Abs(ViewportRect.rect.height - _lastViewportHeight) > 0.0001)
         {
-            lastViewportHeight = ViewportRect.rect.height;
+            _lastViewportHeight = ViewportRect.rect.height;
             _refreshWanted = true;
         }
 
@@ -72,7 +72,7 @@ public class AutoSliderScrollbar : UIBehaviourModel
             UpdateSliderHandle();
     }
 
-    public void UpdateSliderHandle()
+    private void UpdateSliderHandle()
     {
         // calculate handle size based on viewport / total data height
         float totalHeight = ContentRect.rect.height;
@@ -107,7 +107,7 @@ public class AutoSliderScrollbar : UIBehaviourModel
         Slider.Set(val);
     }
 
-    public void OnScrollbarValueChanged(float value)
+    private void OnScrollbarValueChanged(float value)
     {
         value = 1f - value;
         // Don't update the value if it is the same, as we don't want to loop setting the values
@@ -118,7 +118,7 @@ public class AutoSliderScrollbar : UIBehaviourModel
         }
     }
 
-    public void OnSliderValueChanged(float value)
+    private void OnSliderValueChanged(float value)
     {
         value = 1f - value;
         // Don't update the value if it is the same, as we don't want to loop setting the values

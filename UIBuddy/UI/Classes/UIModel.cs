@@ -9,7 +9,7 @@ namespace UIBuddy.UI.Classes;
 /// </summary>
 public abstract class UIModel
 {
-    public abstract GameObject UIRoot { get; }
+    protected abstract GameObject UIRoot { get; }
 
     public bool Enabled
     {
@@ -27,13 +27,13 @@ public abstract class UIModel
 
     public virtual void Toggle() => SetActive(!Enabled);
 
-    public virtual void SetActive(bool active)
+    protected virtual void SetActive(bool active)
     {
         if (UIRoot)
             UIRoot.SetActive(active);
     }
 
-    public virtual void Destroy()
+    protected virtual void Destroy()
     {
         if (UIRoot)
             Object.Destroy(UIRoot);

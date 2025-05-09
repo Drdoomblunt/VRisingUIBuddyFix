@@ -11,7 +11,7 @@ namespace UIBuddy.Classes
         private static string _bindMenuSection;
         public static LocalizationKey BindMenuSectionKey { get; private set; }
 
-        private static Dictionary<AssetGuid, string> _guids = new();
+        private static readonly Dictionary<AssetGuid, string> Guids = new();
 
         public static void  Initialize()
         {
@@ -22,28 +22,28 @@ namespace UIBuddy.Classes
         public static LocalizationKey AddKey(string key)
         {
             var guid = AssetGuid.FromGuid(Guid.NewGuid());
-            _guids[guid] = key;
+            Guids[guid] = key;
             return new LocalizationKey(guid);
         }
 
         public static bool HasKey(LocalizationKey key)
         {
-            return _guids.ContainsKey(key.GetGuid());
+            return Guids.ContainsKey(key.GetGuid());
         }
 
         public static bool HasKey(AssetGuid guid)
         {
-            return _guids.ContainsKey(guid);
+            return Guids.ContainsKey(guid);
         }
 
         public static string GetKey(AssetGuid guid)
         {
-            return _guids[guid];
+            return Guids[guid];
         }
 
         public static string GetKey(LocalizationKey key)
         {
-            return _guids[key.GetGuid()];
+            return Guids[key.GetGuid()];
         }
     }
 }

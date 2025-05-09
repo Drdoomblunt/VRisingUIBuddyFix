@@ -8,13 +8,13 @@ namespace UIBuddy.UI.Panel;
 
 public abstract class GenericPanelBase: IGenericPanel
 {
-    public bool IsDetached { get; protected set; }
+    protected bool IsDetached { get; set; }
     public bool IsRootActive => RootObject?.activeSelf ?? false;
     public GameObject RootObject { get; }
     public Vector2 ReferenceResolution { get; set; }
     public string Name { get; }
     public RectTransform RootRect { get; }
-    public Canvas OwnerCanvas { get; private set; }
+    protected Canvas OwnerCanvas { get; private set; }
     public UIElementDragEx Dragger { get; protected set; }
     private bool ApplyingSaveData { get; set; } = true;
     public bool IsPinned => false;

@@ -20,7 +20,8 @@ namespace UIBuddy.UI.Panel
         private ElementPanel _selectedElementPanel;
         private bool _updatingUI = false;
         private GameObject _titleBar;
-        private ToggleRef _closeToggleRef;
+        private ToggleRef _selectPanelsToggleRef;
+        private ToggleRef _closeAllToggleRef;
 
         // Properties
         public ElementPanel SelectedElementPanel
@@ -136,12 +137,12 @@ namespace UIBuddy.UI.Panel
             toggleContainerRect.pivot = new Vector2(1, 0.5f);
             toggleContainerRect.anchoredPosition = new Vector2(-10, 0);
             toggleContainerRect.sizeDelta = Vector2.zero;
-            var toggleRef = UIFactory.CreateToggle(toggleContainer, $"EnableToggle_{Name}");
-            toggleRef.OnValueChanged += value =>
+            _closeAllToggleRef = UIFactory.CreateToggle(toggleContainer, $"EnableToggle_{Name}");
+            _closeAllToggleRef.OnValueChanged += value =>
             {
-                EnableMainPanel(value);
+                EnableMainPanelInternal(value);
             };
-            toggleRef.Toggle.isOn = ConfigManager.IsModVisible;
+            _closeAllToggleRef.Toggle.isOn = ConfigManager.IsModVisible;
         }
 
         private void CreateNameRow(GameObject parent)
@@ -265,16 +266,14 @@ namespace UIBuddy.UI.Panel
 
             UIFactory.SetLayoutElement(row, minHeight: 30, preferredHeight: 30);
 
-            _closeToggleRef = UIFactory.CreateToggle(row, $"EnableCheckFocus_{nameof(MainControlPanel)}");
-            _closeToggleRef.OnValueChanged += (value) =>
+            _selectPanelsToggleRef = UIFactory.CreateToggle(row, $"EnableCheckFocus_{nameof(MainControlPanel)}");
+            _selectPanelsToggleRef.OnValueChanged += (value) =>
             {
                 ConfigManager.SelectPanelsWithMouse = value;
             };
-            _closeToggleRef.Toggle.isOn = ConfigManager.SelectPanelsWithMouse; // Default value
-            _closeToggleRef.Text.text = "Select panels with mouse";
-            _closeToggleRef.Text.fontSize = 16;
-
-
+            _selectPanelsToggleRef.Toggle.isOn = ConfigManager.SelectPanelsWithMouse; // Default value
+            _selectPanelsToggleRef.Text.text = "Select panels with mouse";
+            _selectPanelsToggleRef.Text.fontSize = 16;
         }
 
         private void CreateButtonsRow(GameObject parent)
@@ -299,8 +298,12 @@ namespace UIBuddy.UI.Panel
             };
         }
 
+        public void ToggleMainPanel()
+        {
+            _closeAllToggleRef.Toggle.isOn = !_closeAllToggleRef.Toggle.isOn;
+        }
 
-        public void EnableMainPanel(bool value)
+        private void EnableMainPanelInternal(bool value)
         {
             if(RootObject == null) return;
             PanelManager.SetPanelsActive(value);
@@ -318,6 +321,7 @@ namespace UIBuddy.UI.Panel
             {
                 // No element selected, set default values
                 _nameValueText.text = "None";
+                _nameValueText.color = Theme.White;
                 _scaleSlider.value = 60.0f; // Default value maps to 1.0 scale
                 _scaleInputField.text = "1.0";
                 _rotationSlider.value = 0.0f;
@@ -331,6 +335,7 @@ namespace UIBuddy.UI.Panel
             {
                 // Update UI with values from the selected element
                 _nameValueText.text = _selectedElementPanel.Name;
+                _nameValueText.color = Theme.ElementOutlineColor;
 
                 // Get current scale
                 float currentScale = 1.0f;
@@ -465,7 +470,7 @@ namespace UIBuddy.UI.Panel
 
         public override void SetActive(bool value)
         {
-            _closeToggleRef.Toggle.isOn = value;
+            _selectPanelsToggleRef.Toggle.isOn = value;
         }
     }
 }

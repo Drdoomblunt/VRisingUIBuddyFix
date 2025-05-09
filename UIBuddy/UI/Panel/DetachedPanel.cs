@@ -268,6 +268,7 @@ public class DetachedPanel: ElementPanel
                 {
                     Outline.OutlineColor = Theme.ElementOutlineColor;
                     Outline.LineWidth = 2f; // Adjust as needed
+                    Outline.UpdateRect(RootRect);
                 }
 
                 if (!string.IsNullOrEmpty(_shortName))
@@ -309,7 +310,7 @@ public class DetachedPanel: ElementPanel
 
                 // Activate the UI
                 if(ConfigManager.IsModVisible)
-                    CustomUIObject.SetActive(true);
+                    RootObject.SetActive(true);
                 Outline?.SetActive(false);
 
                 if (LoadConfigValues())
@@ -336,7 +337,19 @@ public class DetachedPanel: ElementPanel
             ParamHasInitialPosition = true;
             RootRect.anchoredPosition = (Vector2)initialPosition;
         }
-
     }
 
+    public override void SetActive(bool value)
+    {
+        CustomUIObject.SetActive(value);
+        if (!value && PanelManager.MainPanel.SelectedElementPanel == this)
+            PanelManager.MainPanel.SelectedElementPanel = null;
+    }
+
+    public override void SetRootActive(bool value)
+    {
+        RootObject.SetActive(value);
+        TargetObject.SetActive(value);
+        Save();
+    }
 }

@@ -227,11 +227,7 @@ public class ElementPanel: GenericPanelBase
 
     public override void SetRootActive(bool value)
     {
-        //base.SetRootActive(value);
-        //if(_toggleRef == null) //while loading
-            RootObject.SetActive(value);
-        //else 
-        //    _toggleRef.Toggle.isOn = value;
+        RootObject.SetActive(value);
         Save();
     }
 

@@ -11,12 +11,19 @@ namespace UIBuddy.Classes.KeyBinds;
 
 public static class KeybindRegistrator
 {
-    private static readonly string KeybindingsPath = Path.Join(Paths.ConfigPath, "keybindings.json");
+    private static readonly string KeybindingsPath = Path.Join(Paths.ConfigPath, "UIBuddy", "keybindings.json");
 
     private static readonly Dictionary<ButtonInputAction, Keybinding> KeybindingsByFlags = new();
     private static readonly Dictionary<int, Keybinding> KeybindingsByGuid = new();
     internal static readonly Dictionary<string, Keybinding> KeybindingsById = new();
     internal static Dictionary<string, KeybindingData> KeybindingValues = new();
+
+    static KeybindRegistrator()
+    {
+        var path = Path.Join(Paths.ConfigPath, "UIBuddy");
+        if (!Directory.Exists(path))
+            Directory.CreateDirectory(path);
+    }
 
     public static Keybinding Register(KeybindingDescription description)
     {

@@ -7,7 +7,6 @@ using UIBuddy.UI.ScrollView;
 using UnityEngine;
 using UnityEngine.UI;
 using UIBuddy.UI.Classes;
-using Unity.Entities.UniversalDelegates;
 
 namespace UIBuddy.UI.Panel
 {
@@ -189,10 +188,5 @@ namespace UIBuddy.UI.Panel
             _scrollDataHandler.RefreshData();
             _scrollPool.Refresh(true);
         }
-    }
-
-    internal class ElementPanelData
-    {
-        public IGenericPanel Panel { get; set; }
     }
 }

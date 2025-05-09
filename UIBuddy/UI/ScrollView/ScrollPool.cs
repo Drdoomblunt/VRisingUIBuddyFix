@@ -40,7 +40,7 @@ public class ScrollPool<T> : UIBehaviourModel, IEnumerable<CellInfo> where T : I
     /// <summary>
     /// The GameObject which the ScrollRect is attached to.
     /// </summary>
-    public override GameObject UIRoot
+    protected override GameObject UIRoot
     {
         get
         {

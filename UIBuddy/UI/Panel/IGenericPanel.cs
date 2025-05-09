@@ -5,10 +5,8 @@ namespace UIBuddy.UI.Panel
     public interface IGenericPanel
     {
         bool IsRootActive { get; }
-
         GameObject RootObject { get; }
         RectTransform RootRect { get; }
-        Vector2 ReferenceResolution { get; set; }
         string Name { get; }
         float GetOwnerScaleFactor();
         void EnsureValidPosition();

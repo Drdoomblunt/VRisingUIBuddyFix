@@ -20,13 +20,13 @@ public class UIElementDragEx: IUIElementDrag
     public IGenericPanel Panel { get; }
 
     // Dragging
-    public RectTransform DraggableArea { get; }
+    private RectTransform DraggableArea { get; }
 
     public bool WasDragging { get; set; }
 
     public bool IsActive => Rect?.gameObject?.activeSelf ?? false;
 
-    public RectTransform Rect { get; private set; }
+    private RectTransform Rect { get; set; }
 
     public bool IsPinned { get; set; }
 

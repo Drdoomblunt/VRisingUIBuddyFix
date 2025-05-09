@@ -40,27 +40,22 @@ namespace UIBuddy.UI.Classes
 
         private void OnInputChanged(string value)
         {
-            if (!inputsPendingUpdate.Contains(this))
-                inputsPendingUpdate.Add(this);
+            if (!InputsPendingUpdate.Contains(this))
+                InputsPendingUpdate.Add(this);
         }
 
-
-
-
-
         // Static
-
-        internal static readonly HashSet<InputFieldRef> inputsPendingUpdate = new();
+        private static readonly HashSet<InputFieldRef> InputsPendingUpdate = new();
 
         internal static void UpdateInstances()
         {
-            while (inputsPendingUpdate.Any())
+            while (InputsPendingUpdate.Any())
             {
-                var inputField = inputsPendingUpdate.First();
+                var inputField = InputsPendingUpdate.First();
                 LayoutRebuilder.MarkLayoutForRebuild(inputField.Transform);
                 inputField.OnValueChanged?.Invoke(inputField.Component.text);
 
-                inputsPendingUpdate.Remove(inputField);
+                InputsPendingUpdate.Remove(inputField);
             }
         }
     }

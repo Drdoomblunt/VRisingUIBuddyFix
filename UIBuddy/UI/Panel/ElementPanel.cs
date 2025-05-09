@@ -4,6 +4,7 @@ using HarmonyLib;
 using TMPro;
 using UIBuddy.Behaviors;
 using UIBuddy.Managers;
+using UIBuddy.UI.Classes;
 using UIBuddy.Utils;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,9 +27,10 @@ public class ElementPanel: GenericPanelBase
     protected float OriginalScaleFactor;
     //private ToggleRef _toggleRef;
     private readonly string _shortName;
+    protected PanelParameters Parameters { get; set; }
 
-    public ElementPanel(string gameObjectName, string friendlyName, string shortName)
-        : base(gameObjectName, friendlyName)
+    public ElementPanel(string gameObjectName, string friendlyName, string shortName, string panelParentGameObjectName)
+        : base(gameObjectName, friendlyName, panelParentGameObjectName)
     {
         _shortName = shortName;
     }
@@ -38,6 +40,11 @@ public class ElementPanel: GenericPanelBase
     {
     }
 
+    public void SetParameters(PanelParameters prms)
+    {
+        Parameters = prms;
+    }
+
     public override bool Initialize()
     {
         if (RootObject == null)
@@ -45,7 +52,6 @@ public class ElementPanel: GenericPanelBase
             Plugin.Log.LogWarning($"Failed to initialize UIElement: {Name}");
             return false;
         }
-        ConstructDrag(RootObject);
 
         OwnerCanvasScaler = RootObject.GetComponent<CanvasScaler>();
 
@@ -65,15 +71,33 @@ public class ElementPanel: GenericPanelBase
     protected override void ConstructUI()
     {
         // Get or add RectTransform
-        CustomUIObject = UIFactory.CreateUIObject($"MarkPanel_{Name}", RootObject);
+        CustomUIObject = UIFactory.CreateUIObject($"MarkPanel_{Name}", CustomPanelParentObject ?? RootObject);
         CustomUIRect = CustomUIObject.GetComponent<RectTransform>();
         CustomUIObject.SetActive(false);
 
-        // Set anchors manually using individual values instead of Vector2
-        CustomUIRect.anchorMin = new Vector2(0, 0);
-        CustomUIRect.anchorMax = new Vector2(1, 1);
-        CustomUIRect.anchoredPosition = new Vector2(0, 0);
-        CustomUIRect.sizeDelta = new Vector2(0, 0);
+        if (Parameters?.InheritAnchors == true)
+        {
+            // Inherit anchors from the parent object
+            var from = CustomPanelParentObject != null
+                ? CustomPanelParentObject.GetComponent<RectTransform>()
+                : RootRect;
+            CustomUIRect.anchorMin = from.anchorMin;
+            CustomUIRect.anchorMax = from.anchorMax;
+            CustomUIRect.pivot = from.pivot;
+            CustomUIRect.sizeDelta = new Vector2(from.rect.width, from.rect.height);
+            CustomUIRect.anchoredPosition = from.anchoredPosition;
+        }
+        else
+        {
+            // Set anchors manually using individual values instead of Vector2
+            CustomUIRect.anchorMin = new Vector2(0f, 0f);
+            CustomUIRect.anchorMax = new Vector2(1f, 1f);
+            CustomUIRect.anchoredPosition = new Vector2(0f, 0f);
+            CustomUIRect.sizeDelta = new Vector2(0f, 0f);
+        }
+
+        ConstructDrag(CustomPanelParentObject ?? CustomUIObject ?? RootObject);
+
 
         // Add background image
         var bgImage = CustomUIObject.AddComponent<Image>();

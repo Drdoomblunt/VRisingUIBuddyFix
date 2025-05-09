@@ -115,7 +115,7 @@ namespace UIBuddy.UI.Panel
             // Add background image
             var bgImage = _titleBar.AddComponent<Image>();
             bgImage.type = Image.Type.Sliced;
-            bgImage.color = Theme.SliderNormal;
+            bgImage.color = new Color(Theme.SliderNormal.r, Theme.SliderNormal.g, Theme.SliderNormal.b, .9f);
 
             // Create a horizontal layout for the title label
             UIFactory.SetLayoutGroup<HorizontalLayoutGroup>(_titleBar,

@@ -3,6 +3,7 @@ using System.Collections;
 using TMPro;
 using UIBuddy.Behaviors;
 using UIBuddy.Managers;
+using UIBuddy.UI.Classes;
 using UIBuddy.Utils;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,13 +16,12 @@ public class DetachedPanel: ElementPanel
     private RectTransform TargetRect { get; }
     private const float TOLERANCE = 0.001f;
 
-    private Vector2 _oldPosition = Vector2.zero;
+    private Vector2? _oldPosition = Vector2.zero;
     private Vector3 _oldScale = Vector3.one;
     private float _oldRotation = 0f;
     private readonly string _shortName;
 
-    protected bool ParamHasInitialPosition;
-    protected bool ParamPositionValidation = true;
+    public static Vector2 DefaultPanelSize = new Vector2(50f, 50f);
 
 
     public DetachedPanel(string gameObjectName, string friendlyName, string shortName, GameObject parent)
@@ -36,11 +36,11 @@ public class DetachedPanel: ElementPanel
         TargetRect = TargetObject.GetComponent<RectTransform>();
         
         RootRect.anchoredPosition = TargetRect.anchoredPosition;
-        RootRect.anchorMin = TargetRect.anchorMin;
-        RootRect.anchorMax = TargetRect.anchorMax;
-        RootRect.pivot = TargetRect.pivot;
+        //RootRect.anchorMin = TargetRect.anchorMin;
+        //RootRect.anchorMax = TargetRect.anchorMax;
+        //RootRect.pivot = TargetRect.pivot;
 
-        RootRect.sizeDelta = new Vector2(50f, 50f);
+        RootRect.sizeDelta = DefaultPanelSize;
 
         EnsureValidPositionEx();
     }
@@ -49,33 +49,36 @@ public class DetachedPanel: ElementPanel
     {
         if(!IsRootActive) return;
 
-        // Force size to remain 50x50
-        if (Math.Abs(RootRect.sizeDelta.x - 50f) > TOLERANCE ||
-            Math.Abs(RootRect.sizeDelta.y - 50f) > TOLERANCE)
-        {
-            RootRect.sizeDelta = new Vector2(50f, 50f);
-        }
-
         var shouldSave = false;
-        if (Math.Abs(Transform.localEulerAngles.z - _oldRotation) > TOLERANCE)
+        if (_oldPosition.HasValue)
         {
-            TargetRect.localEulerAngles = RootRect.localEulerAngles;
-            shouldSave = true;
-        }
+            // Force size to remain 50x50
+            if (Math.Abs(RootRect.sizeDelta.x - 50f) > TOLERANCE ||
+                Math.Abs(RootRect.sizeDelta.y - 50f) > TOLERANCE)
+            {
+                RootRect.sizeDelta = DefaultPanelSize;
+            }
 
-        if (Math.Abs(Transform.localScale.x - _oldScale.x) > TOLERANCE)
-        {
-            TargetRect.localScale = RootRect.localScale;
-            shouldSave = true;
-        }
+            if (Math.Abs(Transform.localEulerAngles.z - _oldRotation) > TOLERANCE)
+            {
+                TargetRect.localEulerAngles = RootRect.localEulerAngles;
+                shouldSave = true;
+            }
 
-        if (Math.Abs(Transform.localPosition.x - _oldPosition.x) > TOLERANCE ||
-            Math.Abs(Transform.localPosition.y - _oldPosition.y) > TOLERANCE)
-        {
-            TargetRect.anchoredPosition = RootRect.anchoredPosition;
-            if(ParamPositionValidation)
-                EnsureValidPositionEx();
-            shouldSave = true; 
+            if (Math.Abs(Transform.localScale.x - _oldScale.x) > TOLERANCE)
+            {
+                TargetRect.localScale = RootRect.localScale;
+                shouldSave = true;
+            }
+
+            if (Math.Abs(Transform.localPosition.x - _oldPosition.Value.x) > TOLERANCE ||
+                Math.Abs(Transform.localPosition.y - _oldPosition.Value.y) > TOLERANCE)
+            {
+                TargetRect.anchoredPosition = RootRect.anchoredPosition;
+                if (Parameters?.PositionValidation != false)
+                    EnsureValidPositionEx();
+                shouldSave = true;
+            }
         }
 
         _oldPosition = TargetRect.anchoredPosition;
@@ -217,7 +220,6 @@ public class DetachedPanel: ElementPanel
             Plugin.Log.LogWarning($"Failed to initialize UIElement: {Name}");
             return false;
         }
-        ConstructDrag(RootObject);
 
         OwnerCanvasScaler = RootObject.GetComponent<CanvasScaler>();
 
@@ -227,9 +229,7 @@ public class DetachedPanel: ElementPanel
         if(OwnerCanvasScaler == null)
             OriginalScaleFactor = Transform.localScale.x;
 
-
-        if(!base.Initialize())
-            return false;
+        ConstructUI();
 
         return true;
     }
@@ -240,6 +240,8 @@ public class DetachedPanel: ElementPanel
         // Get or add RectTransform
         CustomUIObject = UIFactory.CreateUIObject($"DetachedPanel_{Name}", RootObject);
         CustomUIRect = CustomUIObject.GetComponent<RectTransform>();
+
+        ConstructDrag(CustomPanelParentObject ?? CustomUIObject ?? RootObject);
 
         // Set anchors manually using individual values instead of Vector2
         CustomUIRect.anchorMin = new Vector2(0, 0);
@@ -317,8 +319,11 @@ public class DetachedPanel: ElementPanel
                 if (LoadConfigValues())
                     TargetRect.anchoredPosition = RootRect.anchoredPosition;
 
-                RootRect.sizeDelta = new Vector2(50f, 50f);
-                CustomUIRect.sizeDelta = new Vector2(50f, 50f);
+                RootRect.sizeDelta = DefaultPanelSize;
+                CustomUIRect.sizeDelta = DefaultPanelSize;
+
+                if (Parameters?.InitialPosition != null)
+                    RootRect.anchoredPosition = Parameters.InitialPosition.Value;
             }
         }
         catch (Exception ex)
@@ -328,17 +333,6 @@ public class DetachedPanel: ElementPanel
         }
     }
 
-    public void SetParameters(bool? positionValidation = null, Vector2? initialPosition = null)
-    {
-        if (positionValidation == false)
-            ParamPositionValidation = false;
-
-        if (initialPosition != null)
-        {
-            ParamHasInitialPosition = true;
-            RootRect.anchoredPosition = (Vector2)initialPosition;
-        }
-    }
 
     public override void SetActive(bool value)
     {

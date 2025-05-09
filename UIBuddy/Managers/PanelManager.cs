@@ -45,6 +45,11 @@ public class PanelManager: IDisposable
 
     public static void ReloadElements()
     {
+        var inheritAnchorParam = new PanelParameters
+        {
+            InheritAnchors = true
+        };
+
         AddDrag("BloodOrbParent", "Blood Orb HP", "ORB");
         //AddDetachedDrag("BottomBar(Clone)|Content|TooltipParent|BloodPoolTooltip", "Blood Orb Tooltip Anchor", "BOTA");
 
@@ -56,10 +61,11 @@ public class PanelManager: IDisposable
         AddDrag("BackgroundBig", "Clock+Minimap Background", "Background"); //clock/minimap background
 
         AddDrag("BottomBar(Clone)", "Full Bottom Bar", "FBB"); //bottom bar
-        AddDrag("BottomBar(Clone)|Content|Background|Background", "Bottom Bar Fade", "BBF"); //bottom bar fade
-        AddDrag("BottomBar(Clone)|Content|Background|DarkFade", "Bottom Bar Background", "BBB"); //bottom bar bg
-        AddDetachedDrag("BottomBar(Clone)|Content|Background|ActionBar", "Action Bar", "ACBAR"); //action bar
-        AddDetachedDrag("BottomBar(Clone)|Content|Background|AbilityBar", "Ability Bar", "ABBAR"); //abilityBar bar
+        AddDrag("BottomBar(Clone)|Content|Background|Background", "Bottom Bar Background", "Bar Background"); //bottom bar fade
+        AddDrag("BottomBar(Clone)|Content|Background|DarkFade", "Bottom Bar Fade", "Bar Fade"); //bottom bar bg
+
+        AddDrag("BottomBar(Clone)|Content|Background|ActionBar", "Action Bar", "ACBAR", prms: inheritAnchorParam); //action bar
+        AddDrag("BottomBar(Clone)|Content|Background|AbilityBar", "Ability Bar", "ABBAR", prms: inheritAnchorParam); //abilityBar bar
 
         AddDrag("BottomBar(Clone)|Content|Background|ActionBar|ActionBarEntry", "Action Bar Button 1", "ACB1"); //ab1
         AddDrag("BottomBar(Clone)|Content|Background|ActionBar|ActionBarEntry (1)", "Action Bar Button 2", "ACB2"); //ab2
@@ -69,9 +75,17 @@ public class PanelManager: IDisposable
         AddDrag("Debuffs", "Debuffs", "DBUFF");
 
         AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|HUDAlertParent(Clone)|Container", "(?)Right Alerts", "RA"); //right alerts
-        AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|DangerTextParent(Clone)", "(!!)Bottom Danger", "DANGER"); //bottom danger text
-        //var chatPanel = _pm.AddDetachedDrag("HUDChatParent|ChatWindow(Clone)|Content", "Chat Window", "CHAT"); //chat
-        //chatPanel?.SetParameters(positionValidation: false, initialPosition: new Vector2(500,500));
+        AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|DangerTextParent(Clone)", "(?)Bottom Danger", "DANGER",
+            panelParentGameObjectName: "HUDCanvas(Clone)|Canvas|HUDOther|DangerTextParent(Clone)|Alpha|Background",
+            prms: inheritAnchorParam); //bottom danger text
+        AddDrag("HUDCanvas(Clone)|Canvas|HUDTutorial|TutorialParent(Clone)", "(?)Tutorial", "Tutorial", prms: inheritAnchorParam); //
+
+        var prms = new PanelParameters
+        {
+            PositionValidation = false,
+            InitialPosition = new Vector2(0, 0),
+        };
+        AddDetachedDrag("HUDChatParent|ChatWindow(Clone)|Content", "(!!)Chat Window", "CHAT", prms); //chat
 
         //AddDrag("Version_HUD", "Clan Members");
         //AddDrag("HUDClan", "Clan Members", "CLAN"); //clan
@@ -83,6 +97,9 @@ public class PanelManager: IDisposable
         _pm.AddDrag("SideBar");
         _pm.AddDrag("LinksParentNode");*/
         // _pm.AddDrag(null);
+
+        MainPanel.RootRect.SetAsLastSibling();
+        ElementListPanel.RootRect.SetAsLastSibling();
     }
 
     private static void CreateElementListPanel()
@@ -255,12 +272,23 @@ public class PanelManager: IDisposable
         }
     }
 
-    private static void AddDrag(string gameObjectName, string friendlyName, string shortName = null)
+    /// <summary>
+    /// Adds a dragger to the list of draggers.
+    /// </summary>
+    /// <param name="gameObjectName">Actual object we want to modify</param>
+    /// <param name="friendlyName">Friendly name</param>
+    /// <param name="shortName">Short name</param>
+    /// <param name="panelParentGameObjectName">Optional object to use as panel root</param>
+    /// <param name="prms">Optional parameters</param>
+    private static void AddDrag(string gameObjectName, string friendlyName, string shortName = null, string panelParentGameObjectName = null, PanelParameters prms = null)
     {
         if(DraggersList.FirstOrDefault(a=> a.Panel.Name == friendlyName) != null)
             return;
 
-        var element = new ElementPanel(gameObjectName, friendlyName, shortName);
+        var element = new ElementPanel(gameObjectName, friendlyName, shortName, panelParentGameObjectName);
+
+        if (prms != null)
+            element.SetParameters(prms);
 
         if (element.Initialize())
         {
@@ -270,12 +298,15 @@ public class PanelManager: IDisposable
     }
 
 
-    private static DetachedPanel AddDetachedDrag(string name, string friendlyName, string shortName)
+    private static DetachedPanel AddDetachedDrag(string name, string friendlyName, string shortName, PanelParameters prms = null)
     {
         if (DraggersList.FirstOrDefault(a => a.Panel.Name == friendlyName) != null)
             return null;
 
         var element = new DetachedPanel(name, friendlyName, shortName, PanelHolder);
+
+        if(prms != null)
+            element.SetParameters(prms);
 
         if (element.Initialize())
         {

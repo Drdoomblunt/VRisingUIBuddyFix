@@ -19,19 +19,30 @@ public abstract class GenericPanelBase: IGenericPanel
     private bool ApplyingSaveData { get; set; } = true;
     public bool IsPinned => false;
 
-    protected GenericPanelBase(string gameObjectName, string friendlyName)
+    /// <summary>
+    /// Custom parent for panel in case we can't use direct parent for drag purpose
+    /// </summary>
+    protected readonly GameObject CustomPanelParentObject;
+
+    protected GenericPanelBase(string gameObjectName, string friendlyName, string panelParentGameObjectName)
     {
         Name = friendlyName ?? gameObjectName;
         RootObject = gameObjectName.Contains('|') ? FindInHierarchy(gameObjectName) : GameObject.Find(gameObjectName);
-        if(RootObject == null)
+        if (RootObject == null)
             return;
         RootRect = RootObject.GetComponent<RectTransform>();
-        if(RootRect.sizeDelta.x < 50f || RootRect.sizeDelta.y < 50f)
+        if (RootRect.sizeDelta.x < 50f || RootRect.sizeDelta.y < 50f)
             RootRect.sizeDelta = new Vector2(50f, 50f);
+
         OwnerCanvas = RootObject.GetComponentInParent<Canvas>();
         ReferenceResolution = RootObject.GetComponent<CanvasScaler>()?.referenceResolution ??
                               RootObject.GetComponentInParent<CanvasScaler>()?.referenceResolution ??
                               Vector2.zero;
+
+        if (!string.IsNullOrEmpty(panelParentGameObjectName))
+            CustomPanelParentObject = panelParentGameObjectName.Contains('|')
+                ? FindInHierarchy(panelParentGameObjectName)
+                : GameObject.Find(panelParentGameObjectName);
     }
 
     protected GenericPanelBase(GameObject parent, string panelInternalName)

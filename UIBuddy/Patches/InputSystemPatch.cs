@@ -4,8 +4,9 @@ using HarmonyLib;
 using ProjectM;
 using ProjectM.UI;
 using StunShared.UI;
-using UIBuddy.Classes;
-using UIBuddy.Classes.KeyBinds;
+using UIBuddy.KeyBinds;
+using UIBuddy.Managers;
+using UIBuddy.Utils;
 using UnityEngine;
 using UnityEngine.Events;
 

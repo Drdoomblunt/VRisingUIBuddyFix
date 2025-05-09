@@ -1,12 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UIBuddy.Classes;
 using UIBuddy.UI.ScrollView.Cells.Handlers;
 using UIBuddy.UI.ScrollView.Cells;
 using UIBuddy.UI.ScrollView;
 using UnityEngine;
 using UnityEngine.UI;
 using UIBuddy.UI.Classes;
+using UIBuddy.Managers;
+using UIBuddy.Utils;
 
 namespace UIBuddy.UI.Panel
 {

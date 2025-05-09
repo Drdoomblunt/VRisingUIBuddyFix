@@ -1,6 +1,6 @@
 ﻿using BepInEx.Configuration;
 
-namespace UIBuddy.Classes
+namespace UIBuddy.Managers
 {
     public static class ConfigManager
     {
@@ -24,10 +24,10 @@ namespace UIBuddy.Classes
         {
             if(_cfgSelectPanelsWithMouse != null) return;
 
-            _cfgSelectPanelsWithMouse = Plugin.Instance.Config.Bind<bool>(CATEGORY_SETTINGS, nameof(SelectPanelsWithMouse), false,
+            _cfgSelectPanelsWithMouse = Plugin.Instance.Config.Bind(CATEGORY_SETTINGS, nameof(SelectPanelsWithMouse), false,
                 "Enable selecting panels with mouse");
 
-            _cfgIsModVisible = Plugin.Instance.Config.Bind<bool>(CATEGORY_SETTINGS, nameof(IsModVisible), true,
+            _cfgIsModVisible = Plugin.Instance.Config.Bind(CATEGORY_SETTINGS, nameof(IsModVisible), true,
                 "Are mod panels visible");
         }
     }

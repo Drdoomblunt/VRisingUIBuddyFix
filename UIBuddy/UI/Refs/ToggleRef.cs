@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UIBuddy.UI.Classes
+namespace UIBuddy.UI.Refs
 {
     public class ToggleRef
     {

@@ -1,8 +1,8 @@
 ﻿using System;
 using TMPro;
-using UIBuddy.Classes;
-using UIBuddy.UI.Classes;
+using UIBuddy.UI.Refs;
 using UIBuddy.UI.ScrollView;
+using UIBuddy.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 using Button = UnityEngine.UI.Button;
@@ -313,8 +313,9 @@ namespace UIBuddy.UI
             return groupObj;
         }
 
-        public static GameObject CreateSlider(GameObject parent, string name, out Slider slider)
+        public static SliderRef CreateSlider(GameObject parent, string name)
         {
+
             var sliderObj = CreateUIObject(name, parent, SmallElementSize);
 
             var bgObj = CreateUIObject("Background", sliderObj);
@@ -358,7 +359,7 @@ namespace UIBuddy.UI
 
             handleObj.GetComponent<RectTransform>().sizeDelta = new Vector2(20f, 0f);
 
-            slider = sliderObj.AddComponent<Slider>();
+            var slider = sliderObj.AddComponent<Slider>();
             slider.fillRect = fillObj.GetComponent<RectTransform>();
             slider.handleRect = handleObj.GetComponent<RectTransform>();
             slider.targetGraphic = handleImage;
@@ -373,7 +374,8 @@ namespace UIBuddy.UI
             };
             slider.colors = colorBlock;
 
-            return sliderObj;
+            var result = new SliderRef(slider, sliderObj);
+            return result;
         }
 
         public static ButtonRef CreateButton(GameObject parent, string name, string text, Color? normalColor = null)

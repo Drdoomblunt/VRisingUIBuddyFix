@@ -1,6 +1,6 @@
 ﻿using System;
-using UIBuddy.Classes;
 using UIBuddy.UI.Classes;
+using UIBuddy.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 

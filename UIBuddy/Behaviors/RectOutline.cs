@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace UIBuddy.Classes.Behaviors;
+namespace UIBuddy.Behaviors;
 
 public class RectOutline : MonoBehaviour
 {

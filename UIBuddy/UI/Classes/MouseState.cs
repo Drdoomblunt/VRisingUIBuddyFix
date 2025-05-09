@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace UIBuddy.Classes;
+namespace UIBuddy.UI.Classes;
 
 public struct MouseState
 {

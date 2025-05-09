@@ -4,7 +4,7 @@ using Il2CppSystem.Collections.Generic;
 using Stunlock.Core;
 using Stunlock.Localization;
 
-namespace UIBuddy.Classes
+namespace UIBuddy.Managers
 {
     internal static class LocalizationManager
     {

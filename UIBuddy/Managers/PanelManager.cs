@@ -7,7 +7,7 @@ using UIBuddy.UI.Panel;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UIBuddy.Classes;
+namespace UIBuddy.Managers;
 
 public class PanelManager: IDisposable
 {
@@ -233,8 +233,8 @@ public class PanelManager: IDisposable
             //this is where we restrict panel selection for now
             foreach (var instance in DraggersList.Where(instance =>
                          instance.IsActive &&
-                         ((MainPanel.SelectedElementPanel != null &&
-                           instance.Panel == MainPanel.SelectedElementPanel) ||
+                         (MainPanel.SelectedElementPanel != null &&
+                           instance.Panel == MainPanel.SelectedElementPanel ||
                           IsControlPanel(instance.Panel))))
             {
                 if (!instance.Panel.IsRootActive) continue;

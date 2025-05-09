@@ -1,4 +1,4 @@
-﻿namespace UIBuddy.Classes;
+﻿namespace UIBuddy.Utils;
 
 public static class HashUtils
 {

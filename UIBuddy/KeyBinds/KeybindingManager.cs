@@ -1,7 +1,8 @@
 ﻿using System;
+using UIBuddy.Managers;
 using UnityEngine;
 
-namespace UIBuddy.Classes.KeyBinds;
+namespace UIBuddy.KeyBinds;
 
 internal static class KeybindingManager
 {

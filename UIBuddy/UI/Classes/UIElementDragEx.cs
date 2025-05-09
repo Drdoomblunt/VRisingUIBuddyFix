@@ -1,7 +1,7 @@
 ﻿using System;
-using UIBuddy.Classes;
 using UnityEngine;
 using UIBuddy.UI.Panel;
+using UIBuddy.Managers;
 
 namespace UIBuddy.UI.Classes;
 

@@ -1,5 +1,4 @@
-﻿using UIBuddy.Classes;
-using UIBuddy.UI.Panel;
+﻿using UIBuddy.UI.Panel;
 using UnityEngine;
 
 namespace UIBuddy.UI.Classes

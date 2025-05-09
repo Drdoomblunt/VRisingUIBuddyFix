@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
 using Stunlock.Core;
 using Stunlock.Localization;
-using UIBuddy.Classes;
+using UIBuddy.Managers;
 
 namespace UIBuddy.Patches;
 

@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using UIBuddy.UI.Classes;
+using UnityEngine;
 
-namespace UIBuddy.Classes;
+namespace UIBuddy.Managers;
 
 public static class InputManager
 {

@@ -1,8 +1,9 @@
 ﻿using System;
 using ProjectM;
+using UIBuddy.Utils;
 using UnityEngine;
 
-namespace UIBuddy.Classes.KeyBinds;
+namespace UIBuddy.KeyBinds;
 
 /// <summary>
 /// A bound keybinding instance. You can use this to observe the current

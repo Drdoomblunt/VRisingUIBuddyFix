@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
 
-namespace UIBuddy.Classes;
+namespace UIBuddy.Utils;
 
 public static class CoroutineUtility
 {

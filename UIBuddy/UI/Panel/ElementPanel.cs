@@ -2,8 +2,9 @@
 using System.Collections;
 using HarmonyLib;
 using TMPro;
-using UIBuddy.Classes;
-using UIBuddy.Classes.Behaviors;
+using UIBuddy.Behaviors;
+using UIBuddy.Managers;
+using UIBuddy.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;

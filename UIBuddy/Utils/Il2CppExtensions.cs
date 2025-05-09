@@ -2,7 +2,7 @@
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace UIBuddy.Classes;
+namespace UIBuddy.Utils;
 
 public static class Il2CppExtensions
 {

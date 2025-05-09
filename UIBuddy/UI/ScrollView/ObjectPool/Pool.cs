@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using UIBuddy.Classes;
+using UIBuddy.Managers;
 using UnityEngine;
 
 namespace UIBuddy.UI.ScrollView.ObjectPool;

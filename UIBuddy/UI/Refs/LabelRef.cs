@@ -1,7 +1,7 @@
 ﻿using TMPro;
 using UnityEngine;
 
-namespace UIBuddy.UI.Classes
+namespace UIBuddy.UI.Refs
 {
     public class LabelRef
     {

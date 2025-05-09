@@ -2,9 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UIBuddy.Classes;
+using UIBuddy.Managers;
 using UIBuddy.UI.Classes;
 using UIBuddy.UI.ScrollView.ObjectPool;
+using UIBuddy.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 

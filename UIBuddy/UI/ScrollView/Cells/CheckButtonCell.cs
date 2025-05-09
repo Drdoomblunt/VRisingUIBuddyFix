@@ -1,6 +1,6 @@
 ﻿using System;
 using TMPro;
-using UIBuddy.UI.Classes;
+using UIBuddy.UI.Refs;
 using UnityEngine;
 using UnityEngine.UI;
 

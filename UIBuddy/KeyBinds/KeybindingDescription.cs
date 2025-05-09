@@ -1,7 +1,8 @@
 ﻿using Stunlock.Localization;
+using UIBuddy.Managers;
 using UnityEngine;
 
-namespace UIBuddy.Classes.KeyBinds;
+namespace UIBuddy.KeyBinds;
 
 /// <summary>
 /// Represents a keybinding option.

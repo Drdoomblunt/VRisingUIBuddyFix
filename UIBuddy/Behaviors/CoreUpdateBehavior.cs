@@ -1,8 +1,11 @@
 ﻿using Il2CppInterop.Runtime.Injection;
+using UIBuddy.Managers;
 using UIBuddy.UI.Classes;
+using UIBuddy.UI.Refs;
+using UIBuddy.Utils;
 using UnityEngine;
 
-namespace UIBuddy.Classes.Behaviors;
+namespace UIBuddy.Behaviors;
 
 public class CoreUpdateBehavior : MonoBehaviour
 {

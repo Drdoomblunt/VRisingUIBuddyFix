@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace UIBuddy.Classes.KeyBinds;
+namespace UIBuddy.KeyBinds;
 
 internal class KeybindingData
 {

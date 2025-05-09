@@ -3,8 +3,9 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UIBuddy.Classes;
-using UIBuddy.UI.Classes;
+using UIBuddy.UI.Refs;
+using UIBuddy.Managers;
+using UIBuddy.Utils;
 
 namespace UIBuddy.UI.Panel
 {
@@ -187,13 +188,13 @@ namespace UIBuddy.UI.Panel
             UIFactory.SetLayoutElement(scaleLabel.GameObject, minWidth: 70, preferredWidth: 70);
 
             // Scale slider
-            var sliderObj = UIFactory.CreateSlider(scaleRow, $"ScaleSlider_{nameof(MainControlPanel)}", out var slider);
-            _scaleSlider = slider;
+            var sliderRef = UIFactory.CreateSlider(scaleRow, $"ScaleSlider_{nameof(MainControlPanel)}");
+            _scaleSlider = sliderRef.Slider;
             _scaleSlider.minValue = 20.0f;
             _scaleSlider.maxValue = 100.0f;
             _scaleSlider.value = 60.0f; // Default value
-            _scaleSlider.onValueChanged.AddListener(new Action<float>(OnScaleSliderChanged));
-            UIFactory.SetLayoutElement(sliderObj, minWidth: 120, preferredWidth: 120, flexibleWidth: 1, minHeight: 35, preferredHeight: 35);
+            sliderRef.OnValueChanged += OnScaleSliderChanged;
+            UIFactory.SetLayoutElement(sliderRef.GameObject, minWidth: 120, preferredWidth: 120, flexibleWidth: 1, minHeight: 35, preferredHeight: 35);
 
             // Scale input field
             var scaleInputRef = UIFactory.CreateInputField(scaleRow, $"ScaleInput_{nameof(MainControlPanel)}", "");
@@ -220,13 +221,13 @@ namespace UIBuddy.UI.Panel
             UIFactory.SetLayoutElement(rotationLabel.GameObject, minWidth: 70, preferredWidth: 70);
 
             // Rotation slider
-            var sliderObj = UIFactory.CreateSlider(rotationRow, $"RotationSlider_{nameof(MainControlPanel)}", out var slider);
-            _rotationSlider = slider;
+            var sliderRef = UIFactory.CreateSlider(rotationRow, $"RotationSlider_{nameof(MainControlPanel)}");
+            _rotationSlider = sliderRef.Slider;
             _rotationSlider.minValue = 0.0f;
             _rotationSlider.maxValue = 360.0f;
             _rotationSlider.value = 0.0f; // Default value
-            _rotationSlider.onValueChanged.AddListener(new Action<float>(OnRotationSliderChanged));
-            UIFactory.SetLayoutElement(sliderObj, minWidth: 120, preferredWidth: 120, flexibleWidth: 1, minHeight: 35, preferredHeight: 35);
+            sliderRef.OnValueChanged += OnRotationSliderChanged;
+            UIFactory.SetLayoutElement(sliderRef.GameObject, minWidth: 120, preferredWidth: 120, flexibleWidth: 1, minHeight: 35, preferredHeight: 35);
 
             // Rotation input field
             var inputRef = UIFactory.CreateInputField(rotationRow, $"RotationInput_{nameof(MainControlPanel)}", "");

@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UIBuddy.UI.Classes;
+namespace UIBuddy.UI.Refs;
 
 /// <summary>
 /// A simple helper class to handle a button's OnClick more effectively, along with some helpers.

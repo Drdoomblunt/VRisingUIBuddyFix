@@ -7,7 +7,7 @@ using BepInEx;
 using ProjectM;
 using UnityEngine;
 
-namespace UIBuddy.Classes.KeyBinds;
+namespace UIBuddy.KeyBinds;
 
 public static class KeybindRegistrator
 {

@@ -1,10 +1,13 @@
 # UI Buddy mod for V Rising
+<img src="https://github.com/panthernet/VRisingUIBuddy/blob/main/logo.png" width="240" height="240"/>
+
 ## Table of Contents
 
 - [Features](#features)
 - [Installation](#installation)
 - [Guide](#guide)
 - [Credits](#credits)
+- [ChangeLog](CHANGELOG.md)
 
 ## Sponsor this project
 
@@ -58,3 +61,4 @@ Some controls like `Ability Bar` and `Action Bar` have quirky structure so we us
 - [Bloodstone](https://github.com/decaprime/Bloodstone) keybinds work logic
 - [Retro Camera](https://github.com/mfoltz/RetroCamera) enhanced and working keybinds update
 - [XP Rising](https://github.com/aontas/XPRising) enhanced UI management base
+- [V Rising Mod Community](https://discord.gg/vrisingmods) invaluable help on digging into the code

@@ -27,6 +27,7 @@ namespace UIBuddy.UI
             if (parent)
             {
                 obj.transform.SetParent(parent.transform, false);
+                obj.transform.SetAsLastSibling();
             }
 
             var rect = obj.AddComponent<RectTransform>();

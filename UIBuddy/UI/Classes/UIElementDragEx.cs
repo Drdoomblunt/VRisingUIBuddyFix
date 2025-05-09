@@ -11,6 +11,7 @@ public class UIElementDragEx: IUIElementDrag
     public bool AllowDrag => true;
 
     public Action OnFinishDrag;
+    public Action OnBeginDrag;
 
     // Common
     private Vector2 _initialMousePos;
@@ -49,7 +50,7 @@ public class UIElementDragEx: IUIElementDrag
             if (inDragPos)
             {
                 PanelManager.DraggerHandledThisFrame = true;
-                OnBeginDrag();
+                OnBeginDragging();
             }
         }
         else if (state.HasFlag(MouseState.ButtonState.Down))
@@ -75,15 +76,16 @@ public class UIElementDragEx: IUIElementDrag
 
     #region DRAGGING
 
-    public void OnBeginDrag()
+    private void OnBeginDragging()
     {
         PanelManager.WasAnyDragging = true;
         WasDragging = true;
         _initialMousePos = InputManager.Mouse.Position;
         _initialValue = Rect.anchoredPosition;
+        OnBeginDrag?.Invoke();
     }
 
-    public void OnDrag()
+    private void OnDrag()
     {
         var mousePos = (Vector2)InputManager.Mouse.Position;
 
@@ -94,7 +96,7 @@ public class UIElementDragEx: IUIElementDrag
         Panel.EnsureValidPosition();
     }
 
-    public void OnEndDrag()
+    private void OnEndDrag()
     {
         WasDragging = false;
 

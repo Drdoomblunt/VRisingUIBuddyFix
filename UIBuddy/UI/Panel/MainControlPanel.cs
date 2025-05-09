@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UIBuddy.Classes;
-using UIBuddy.UI.Classes;
 
 namespace UIBuddy.UI.Panel
 {
@@ -79,10 +78,11 @@ namespace UIBuddy.UI.Panel
             CreateScaleRow(contentArea);
             CreateRotationRow(contentArea);
             CreateCheckRow(contentArea);
+            CreateCheckFocusRow(contentArea);
             CreateButtonsRow(contentArea);
 
             // Create the dragger that uses the title bar for dragging
-            ConstructDrag(_titleBar);
+            ConstructDrag(_titleBar, true);
 
             CoroutineUtility.StartCoroutine(LateSetupCoroutine());
         }
@@ -92,7 +92,8 @@ namespace UIBuddy.UI.Panel
             yield return null;
 
             // Activate the UI
-            RootObject.SetActive(true);
+            if(ConfigManager.IsModVisible)
+                RootObject.SetActive(true);
         }
 
         private void CreateTitleBar(GameObject parent)
@@ -247,6 +248,28 @@ namespace UIBuddy.UI.Panel
             toggleRef.OnValueChanged += ToggleAllEnabled;
             toggleRef.Toggle.isOn = true; // Default value
             toggleRef.Text.text = "Show Panels";
+            toggleRef.Text.fontSize = 16;
+        }
+
+        private void CreateCheckFocusRow(GameObject parent)
+        {
+            var row = UIFactory.CreateHorizontalGroup(parent, $"CheckFocusRow_{nameof(MainControlPanel)}",
+                forceExpandWidth: false,
+                forceExpandHeight: false,
+                childControlWidth: true,
+                childControlHeight: true,
+                spacing: 10,
+                new Vector4(5, 5, 5, 5));
+
+            UIFactory.SetLayoutElement(row, minHeight: 30, preferredHeight: 30);
+
+            var toggleRef = UIFactory.CreateToggle(row, $"EnableCheckFocus_{nameof(MainControlPanel)}");
+            toggleRef.OnValueChanged += (value) =>
+            {
+                ConfigManager.SelectPanelsWithMouse = value;
+            };
+            toggleRef.Toggle.isOn = ConfigManager.SelectPanelsWithMouse; // Default value
+            toggleRef.Text.text = "Select panels with mouse";
             toggleRef.Text.fontSize = 16;
 
 

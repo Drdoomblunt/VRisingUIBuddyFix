@@ -4,8 +4,6 @@ using System.Linq;
 using UIBuddy.UI;
 using UIBuddy.UI.Classes;
 using UIBuddy.UI.Panel;
-using UIBuddy.UI.ScrollView;
-using UIBuddy.UI.ScrollView.Cells;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,8 +13,7 @@ namespace UIBuddy.Classes
     {
         private Vector3 _previousMousePosition;
         private MouseState.ButtonState _previousMouseButtonState;
-        private static List<ScrollPool<CheckButtonCell>> _pools = new();
-        private static readonly List<IUIElementDrag> _draggers = new();
+        private static readonly List<IUIElementDrag> DraggersList = new();
         public static bool WasAnyDragging;
         public static bool DraggerHandledThisFrame;
         protected virtual bool MouseInTargetDisplay => true;
@@ -30,14 +27,12 @@ namespace UIBuddy.Classes
         // Main control panel
         public static  MainControlPanel MainPanel { get; private set; }
         public static ElementListPanel ElementListPanel { get; private set; }
-        protected internal static bool FocusHandledThisFrame;
+        private static bool _focusHandledThisFrame;
 
-        protected virtual bool ShouldUpdateFocus
-        {
-            get => MouseInTargetDisplay &&
-                   (InputManager.Mouse.Button0 == MouseState.ButtonState.Down) &&
-                   !WasAnyDragging;
-        }
+        protected virtual bool ShouldUpdateFocus =>
+            MouseInTargetDisplay &&
+            InputManager.Mouse.Button0 == MouseState.ButtonState.Down &&
+            !WasAnyDragging;
 
         public PanelManager()
         {
@@ -47,23 +42,22 @@ namespace UIBuddy.Classes
             CreateElementListPanel();
         }
 
-        private void CreateElementListPanel()
+        private static void CreateElementListPanel()
         {
             ElementListPanel = new ElementListPanel(PanelHolder);
             ElementListPanel.Initialize();
-            _draggers.Add(ElementListPanel.Dragger);
+            DraggersList.Add(ElementListPanel.Dragger);
             Plugin.Log.LogInfo("Elements list panel created and initialized successfully");
         }
 
-
-        private void CreateMainPanel()
+        private static void CreateMainPanel()
         {
             try
             {
                 // Create the main control panel
                 MainPanel = new MainControlPanel(PanelHolder);
                 MainPanel.Initialize();
-                _draggers.Add(MainPanel.Dragger);
+                DraggersList.Add(MainPanel.Dragger);
                 Plugin.Log.LogInfo("Main panel created and initialized successfully");
 
             }
@@ -100,12 +94,11 @@ namespace UIBuddy.Classes
             canvasRootRect.pivot = new Vector2(0.5f, 0.5f);
 
             PanelHolder = UIFactory.CreateUIObject("PanelHolder", CanvasRoot);
-            RectTransform rect = PanelHolder.GetComponent<RectTransform>();
+            var rect = PanelHolder.GetComponent<RectTransform>();
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
 
             CanvasRoot.SetActive(true);
-
 
             PoolHolder = new GameObject("UIBuddy_PoolHolder");
             PoolHolder.transform.parent = CanvasRoot.transform;
@@ -118,15 +111,10 @@ namespace UIBuddy.Classes
             if(!MainPanel.IsRootActive)
                 return;
 
-            //if (ShouldUpdateFocus)
-            //    UpdateFocus();
+            if (ConfigManager.SelectPanelsWithMouse && ShouldUpdateFocus)
+                UpdateFocus();
 
-            foreach (var pool in _pools)
-            {
-                pool.Update();
-            }
-
-            foreach (var panel in _draggers.Select(a=> a.Panel))
+            foreach (var panel in DraggersList.Select(a=> a.Panel))
             {
                 panel.Update();
             }
@@ -135,37 +123,31 @@ namespace UIBuddy.Classes
                 UpdateDraggers();
 
             DraggerHandledThisFrame = false;
-            FocusHandledThisFrame = false;
+            _focusHandledThisFrame = false;
         }
 
         protected virtual void UpdateFocus()
         {
-            bool clickedInAny = false;
 
             // If another UIBase has already handled a user's click for focus, don't update it for this UIBase.
-            if (!FocusHandledThisFrame)
+            if (!_focusHandledThisFrame)
             {
-                Vector3 mousePos = InputManager.Mouse.Position;
-                int count = _draggers.Count;// PanelHolder.transform.childCount;
-
-
-                var panelsThroughClick = _draggers.Where(a =>
+                var mousePos = InputManager.Mouse.Position;
+   
+                var panelsThroughClick = DraggersList.Where(a =>
                         a.Panel.IsRootActive &&
                         a.Panel.RootRect.rect.Contains(a.Panel.RootRect.InverseTransformPoint(mousePos)))
                     .Select(a => a.Panel).ToList();
 
                 if (panelsThroughClick.Count > 1)
                 {
-                    foreach (var panel in panelsThroughClick)
-                    {
-                        if (MainPanel.SelectedElementPanel != panel)
-                        {
-                            SelectPanel(panel);
-                            //if(panel is not ElementPanel)
-                            //    panel.RootObject.transform.SetAsLastSibling();
-                            break;
-                        }
-                    }
+                    var filteredPanels = panelsThroughClick.Where(panel => MainPanel.SelectedElementPanel != panel)
+                        .ToArray();
+                    var panel = filteredPanels.FirstOrDefault();
+                    SelectPanel(panel);
+                    var dragger = DraggersList.FirstOrDefault(d => d.Panel == panel);
+                    DraggersList.Remove(dragger);
+                    DraggersList.Add(dragger);
                 }
                 else
                 {
@@ -173,52 +155,21 @@ namespace UIBuddy.Classes
                     if (panel != null)
                     {
                         SelectPanel(panel);
-                        if(panel is not ElementPanel)
-                            panel.RootObject.transform.SetAsLastSibling();
+                        //if(panel is not ElementPanel)
+                        //    panel.RootObject.transform.SetAsLastSibling();
                     }
                 }
-                FocusHandledThisFrame = true;
-
-
-                /*for (int i = count - 1; i >= 0; i--)
-                {
-                    // make sure this is a real recognized panel
-                    var panel = _draggers[i].Panel;
-                    Transform transform = panel.RootObject.GetComponent<Transform>();
-
-                    // check if our mouse is clicking inside the panel
-                    Vector3 pos = panel.RootRect.InverseTransformPoint(mousePos);
-                    if (!panel.IsRootActive || !panel.RootRect.rect.Contains(pos)) continue;
-
-                    // Panel was clicked in.
-                    focusHandledThisFrame = true;
-                    clickedInAny = true;
-
-                   // int offset = CanvasRoot.transform.childCount - RootRect.GetSiblingIndex();
-                   // Canvas.sortingOrder = TOP_SORTORDER - offset;
-
-
-                    // if this is not the top panel, reorder and invoke the onchanged event
-                    if (transform.GetSiblingIndex() != count - 1)
-                    {
-                        // Set the clicked panel to be on top
-                        transform.SetAsLastSibling();
-
-                        ///////////InvokeOnPanelsReordered();
-                    }
-
-                    break;
-                }*/
+                _focusHandledThisFrame = true;
             }
 
             //if (!clickedInAny)
             //    OnClickedOutsidePanels?.Invoke();
         }
 
-        public static bool IsControlPanelSelected()
+        private static bool IsControlPanelSelected()
         {
             var mousePos = InputManager.Mouse.Position;
-            Vector3 dragPos = MainPanel.RootRect.InverseTransformPoint(mousePos);
+            var dragPos = MainPanel.RootRect.InverseTransformPoint(mousePos);
             bool inDragPos = MainPanel.RootRect.rect.Contains(dragPos);
             if (inDragPos)
                 return true;
@@ -253,7 +204,7 @@ namespace UIBuddy.Classes
                 }*/
 
                //this is where we restrict panel selection for now
-               foreach (var instance in _draggers.Where(instance =>
+               foreach (var instance in DraggersList.Where(instance =>
                             instance.IsActive &&
                             ((MainPanel.SelectedElementPanel != null &&
                               instance.Panel == MainPanel.SelectedElementPanel) ||
@@ -278,37 +229,37 @@ namespace UIBuddy.Classes
 
             if (WasAnyDragging && state.HasFlag(MouseState.ButtonState.Up))
             {
-                foreach (var instance in _draggers)
+                foreach (var instance in DraggersList)
                     instance.WasDragging = false;
                 WasAnyDragging = false;
             }
         }
 
-        public void AddDrag(string gameObjectName, string friendlyName)
+        public static void AddDrag(string gameObjectName, string friendlyName)
         {
-            if(_draggers.FirstOrDefault(a=> a.Panel.Name == friendlyName) != null)
+            if(DraggersList.FirstOrDefault(a=> a.Panel.Name == friendlyName) != null)
                 return;
 
             var element = new ElementPanel(gameObjectName, friendlyName);
 
             if (element.Initialize())
             {
-                _draggers.Add(element.Dragger);
+                DraggersList.Add(element.Dragger);
                 ElementListPanel.AddElement(element);
             }
         }
 
 
-        public DetachedPanel AddDetachedDrag(string name, string friendlyName, string shortName)
+        public static DetachedPanel AddDetachedDrag(string name, string friendlyName, string shortName)
         {
-            if (_draggers.FirstOrDefault(a => a.Panel.Name == friendlyName) != null)
+            if (DraggersList.FirstOrDefault(a => a.Panel.Name == friendlyName) != null)
                 return null;
 
             var element = new DetachedPanel(name, friendlyName, shortName, PanelHolder);
 
             if (element.Initialize())
             {
-                _draggers.Add(element.Dragger);
+                DraggersList.Add(element.Dragger);
                 ElementListPanel.AddElement(element);
                 return element;
             }
@@ -318,9 +269,9 @@ namespace UIBuddy.Classes
 
         public void Dispose()
         {
-            foreach (var panel in _draggers.Select(a=> a.Panel))
+            foreach (var panel in DraggersList.Select(a=> a.Panel))
                 panel.Dispose();
-            _draggers.Clear();
+            DraggersList.Clear();
         }
 
         public static void SelectPanel(IGenericPanel panel)
@@ -329,7 +280,7 @@ namespace UIBuddy.Classes
                 return;
 
             // clear all panels outline
-            foreach (var drag in _draggers)
+            foreach (var drag in DraggersList)
                 drag.Panel.SelectPanelAsCurrentlyActive(false);
             
             // do not select inactive panel
@@ -340,9 +291,9 @@ namespace UIBuddy.Classes
             }
 
             // select panel
-            var dragger = _draggers.FirstOrDefault(d => d.Panel == panel);
-            _draggers.Remove(dragger);
-            _draggers.Insert(0, dragger);
+            var dragger = DraggersList.FirstOrDefault(d => d.Panel == panel);
+            DraggersList.Remove(dragger);
+            DraggersList.Insert(0, dragger);
             panel.SelectPanelAsCurrentlyActive(true);
             MainPanel.SelectedElementPanel = panel as ElementPanel;
         }
@@ -355,11 +306,10 @@ namespace UIBuddy.Classes
             }
         }
 
-        public static List<IGenericPanel> GetAllPanels()
+        private static List<IGenericPanel> GetAllPanels()
         {
-            return _draggers.Where(drag => drag.Panel != MainPanel && drag.Panel != ElementListPanel)
+            return DraggersList.Where(drag => drag.Panel != MainPanel && drag.Panel != ElementListPanel)
                 .Select(a => a.Panel).ToList();
         }
-
     }
 }

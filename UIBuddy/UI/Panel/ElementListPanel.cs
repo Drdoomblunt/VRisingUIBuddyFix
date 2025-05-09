@@ -25,7 +25,7 @@ namespace UIBuddy.UI.Panel
 
         protected override void ConstructUI()
         {
-            SetActive(true);
+            SetActive(false);
 
             // Set size for the main panel
             RootRect.sizeDelta = new Vector2(400, 400);
@@ -37,7 +37,7 @@ namespace UIBuddy.UI.Panel
 
             // Create title bar
             _titleBar = UIFactory.CreateUIObject($"TitleBar_{nameof(ElementListPanel)}", RootObject);
-            ConstructDrag(_titleBar);
+            ConstructDrag(_titleBar, true);
 
             // Create content area that takes all space below the title bar
             var contentArea = UIFactory.CreateUIObject($"ContentArea_{nameof(ElementListPanel)}", RootObject);
@@ -117,8 +117,10 @@ namespace UIBuddy.UI.Panel
             CreateTitleBar(RootObject);
             if(RootRect.anchoredPosition == Vector2.zero)
                 RootRect.anchoredPosition = new Vector2(RootRect.anchoredPosition.x + 350, RootRect.anchoredPosition.y);
+
             // Activate the UI
-            RootObject.SetActive(true);
+            if (ConfigManager.IsModVisible)
+                RootObject.SetActive(true);
         }
 
         public void AddElement(IGenericPanel panel)
@@ -165,6 +167,8 @@ namespace UIBuddy.UI.Panel
                 data.Panel.SetRootActive(value);
                 if(value)
                     PanelManager.SelectPanel(data.Panel);
+                else data.Panel.SelectPanelAsCurrentlyActive(false);
+
                 UpdateSelectedEntry(value ? index : -1);
             };
         }

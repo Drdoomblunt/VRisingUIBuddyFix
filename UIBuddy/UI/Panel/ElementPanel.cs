@@ -61,6 +61,7 @@ public class ElementPanel: GenericPanelBase
     protected override void ConstructUI()
     {
         // Get or add RectTransform
+        RootObject.SetActive(false);
         CustomUIObject = UIFactory.CreateUIObject($"MarkPanel_{Name}", RootObject);
         CustomUIRect = CustomUIObject.GetComponent<RectTransform>();
 
@@ -178,7 +179,8 @@ public class ElementPanel: GenericPanelBase
                     }
                 }*/
                 // Activate the UI
-                CustomUIObject.SetActive(true);
+                if(ConfigManager.IsModVisible)
+                    CustomUIObject.SetActive(true);
 
                 LoadConfigValues();
             }

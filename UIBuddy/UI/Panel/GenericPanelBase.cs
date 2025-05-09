@@ -43,10 +43,14 @@ public abstract class GenericPanelBase: IGenericPanel
         ReferenceResolution = RootObject.GetComponentInParent<CanvasScaler>()?.referenceResolution ?? Vector2.zero;
     }
 
-    protected void ConstructDrag(GameObject dragObject)
+    protected void ConstructDrag(GameObject dragObject, bool bringToFront = false)
     {
         Dragger = new UIElementDragEx(dragObject, this);
         Dragger.OnFinishDrag += () => OnFinishedDrag();
+        Dragger.OnBeginDrag += () =>
+        {
+            if (bringToFront) RootRect.SetAsLastSibling();
+        };
     }
 
     public virtual bool Initialize()
@@ -315,9 +319,12 @@ public abstract class GenericPanelBase: IGenericPanel
             RootRect.SetAnchorsFromString(split[1]);
             RootRect.SetPositionFromString(split[2]);
             RootRect.SetRotationFromString(split[3]);
-            //if (split.Length > 2 && bool.TryParse(split[4], out var pinned))
-            //   IsPinned = pinned;
-            //EnsureValidSize();
+
+            if (IsDetached)
+            {
+                RootRect.sizeDelta = new Vector2(50f, 50f);
+            }
+
             EnsureValidPosition();
         }
         catch

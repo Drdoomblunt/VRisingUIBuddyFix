@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Timers;
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
@@ -59,6 +60,8 @@ namespace UIBuddy
 
                 Log.LogInfo("Initializing UIBuddy...");
                 EnsureThemeInitialized();
+                ConfigManager.Initialize();
+
                 ClassInjector.RegisterTypeInIl2Cpp<RectOutline>();
                 _updateBehavior = new CoreUpdateBehavior();
                 _updateBehavior.Setup();
@@ -112,33 +115,32 @@ namespace UIBuddy
 
         public void ReloadElements()
         {
-            _pm.AddDrag("BloodOrbParent", "Blood Orb HP");
-            _pm.AddDetachedDrag("BottomBar(Clone)|Content|TooltipParent|BloodPoolTooltip", "Blood Orb Tooltip Anchor", "BOTA");
+            PanelManager.AddDrag("BloodOrbParent", "Blood Orb HP");
+            PanelManager.AddDetachedDrag("BottomBar(Clone)|Content|TooltipParent|BloodPoolTooltip", "Blood Orb Tooltip Anchor", "BOTA");
 
-            _pm.AddDrag("JournalParent(Clone)", "Journal (left top anchor)");
-            _pm.AddDrag("TargetInfoPanel(Clone)", "Target Info");
-            _pm.AddDrag("Buffs", "Buffs");
-            _pm.AddDrag("Debuffs", "Debuffs");
-            _pm.AddDrag("BottomBar(Clone)", "Full Bottom Bar"); //bottom bar
-            _pm.AddDrag("BottomBar(Clone)|Content|Background|Background", "Bottom Bar Fade"); //bottom bar fade
-            _pm.AddDrag("BottomBar(Clone)|Content|Background|DarkFade", "Bottom Bar BG"); //bottom bar bg
-            _pm.AddDetachedDrag("BottomBar(Clone)|Content|Background|ActionBar", "Action Bar", "ACBAR"); //action bar
-            _pm.AddDrag("BottomBar(Clone)|Content|Background|ActionBar|ActionBarEntry", "ACB1"); //ab1
-            _pm.AddDrag("BottomBar(Clone)|Content|Background|ActionBar|ActionBarEntry (1)", "ACB2"); //ab2
-            _pm.AddDetachedDrag("BottomBar(Clone)|Content|Background|AbilityBar", "Ability Bar", "ABBAR"); //abilityBar bar
-            _pm.AddDrag("AbilityBarEntry_Primary", "AB primary");
+            PanelManager.AddDrag("JournalParent(Clone)", "Journal (left top anchor)");
+            PanelManager.AddDrag("TargetInfoPanel(Clone)", "Target Info");
+            PanelManager.AddDrag("Buffs", "Buffs");
+            PanelManager.AddDrag("Debuffs", "Debuffs");
+            PanelManager.AddDrag("BottomBar(Clone)", "Full Bottom Bar"); //bottom bar
+            PanelManager.AddDrag("BottomBar(Clone)|Content|Background|Background", "Bottom Bar Fade"); //bottom bar fade
+            PanelManager.AddDrag("BottomBar(Clone)|Content|Background|DarkFade", "Bottom Bar BG"); //bottom bar bg
+            PanelManager.AddDetachedDrag("BottomBar(Clone)|Content|Background|ActionBar", "Action Bar", "ACBAR"); //action bar
+            PanelManager.AddDrag("BottomBar(Clone)|Content|Background|ActionBar|ActionBarEntry", "ACB1"); //ab1
+            PanelManager.AddDrag("BottomBar(Clone)|Content|Background|ActionBar|ActionBarEntry (1)", "ACB2"); //ab2
+            PanelManager.AddDetachedDrag("BottomBar(Clone)|Content|Background|AbilityBar", "Ability Bar", "ABBAR"); //abilityBar bar
+            PanelManager.AddDrag("AbilityBarEntry_Primary", "AB primary");
 
-            _pm.AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|HUDAlertParent(Clone)|Container", "Right Alerts"); //right alerts
-            _pm.AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|DangerTextParent(Clone)|Alpha|Background", "Bottom Danger (big right shift!)"); //bottom danger text
-            var chatPanel = _pm.AddDetachedDrag("HUDChatParent|ChatWindow(Clone)|Content", "Chat Window", "CHAT"); //chat
-            if (chatPanel != null)
-                chatPanel.SetParameters(positionValidation: false, initialPosition: new Vector2(500,500));
+            PanelManager.AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|HUDAlertParent(Clone)|Container", "Right Alerts"); //right alerts
+            PanelManager.AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|DangerTextParent(Clone)", "Bottom Danger (big right shift!)"); //bottom danger text
+            //var chatPanel = _pm.AddDetachedDrag("HUDChatParent|ChatWindow(Clone)|Content", "Chat Window", "CHAT"); //chat
+            //chatPanel?.SetParameters(positionValidation: false, initialPosition: new Vector2(500,500));
 
-            _pm.AddDrag("ClockParent3(Clone)|Content|Parent", "DayNight sphere"); //daytime circle
-            _pm.AddDrag("BackgroundBig", "Clock+Minimap BG"); //clock/minimap background
-            _pm.AddDrag("MiniMapParent(Clone)|Root|Panel", "Minimap"); //minimap
+            PanelManager.AddDrag("ClockParent3(Clone)|Content|Parent", "DayNight sphere"); //daytime circle
+            PanelManager.AddDrag("BackgroundBig", "Clock+Minimap BG"); //clock/minimap background
+            PanelManager.AddDrag("MiniMapParent(Clone)|Root|Panel", "Minimap"); //minimap
 
-            _pm.AddDrag("Version_HUD", "Clan Members");
+            PanelManager.AddDrag("Version_HUD", "Clan Members");
             // _pm.AddDrag("HUDClan"); //clan
             // _pm.AddDrag("HUDTutorial"); //tutorial
             // _pm.AddDrag("HUDRecipeTrackerParent"); //recipe tracker

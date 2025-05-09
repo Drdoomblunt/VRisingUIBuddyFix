@@ -37,12 +37,22 @@ public class DetachedPanel: ElementPanel
         RootRect.anchorMin = TargetRect.anchorMin;
         RootRect.anchorMax = TargetRect.anchorMax;
         RootRect.pivot = TargetRect.pivot;
+
+        RootRect.sizeDelta = new Vector2(50f, 50f);
+
         EnsureValidPositionEx();
     }
 
     public override void Update()
     {
         if(!IsRootActive) return;
+
+        // Force size to remain 50x50
+        if (Math.Abs(RootRect.sizeDelta.x - 50f) > TOLERANCE ||
+            Math.Abs(RootRect.sizeDelta.y - 50f) > TOLERANCE)
+        {
+            RootRect.sizeDelta = new Vector2(50f, 50f);
+        }
 
         var shouldSave = false;
         if (Math.Abs(Transform.localEulerAngles.z - _oldRotation) > TOLERANCE)
@@ -226,6 +236,7 @@ public class DetachedPanel: ElementPanel
 
     protected override void ConstructUI()
     {
+        RootObject.SetActive(false);
         // Get or add RectTransform
         CustomUIObject = UIFactory.CreateUIObject($"DetachedPanel_{Name}", RootObject);
         CustomUIRect = CustomUIObject.GetComponent<RectTransform>();
@@ -295,14 +306,15 @@ public class DetachedPanel: ElementPanel
                     }
                 }
 
-                RootRect.sizeDelta = new Vector2(50f, 50f);
-                CustomUIRect.sizeDelta = new Vector2(50f, 50f);
-
                 // Activate the UI
-                CustomUIObject.SetActive(true);
+                if(ConfigManager.IsModVisible)
+                    CustomUIObject.SetActive(true);
 
                 if(LoadConfigValues())
                     TargetRect.anchoredPosition = RootRect.anchoredPosition;
+
+                RootRect.sizeDelta = new Vector2(50f, 50f);
+                CustomUIRect.sizeDelta = new Vector2(50f, 50f);
             }
         }
         catch (Exception ex)

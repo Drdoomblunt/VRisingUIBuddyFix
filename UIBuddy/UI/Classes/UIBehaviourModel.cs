@@ -10,7 +10,7 @@ namespace UIBuddy.UI.Classes;
 public abstract class UIBehaviourModel : UIModel
 {
     // Static 
-    static readonly List<UIBehaviourModel> Instances = new();
+    private static readonly List<UIBehaviourModel> Instances = new();
 
     internal static void UpdateInstances()
     {
@@ -21,7 +21,7 @@ public abstract class UIBehaviourModel : UIModel
         {
             for (int i = Instances.Count - 1; i >= 0; i--)
             {
-                UIBehaviourModel instance = Instances[i];
+                var instance = Instances[i];
                 if (instance == null || !instance.UIRoot)
                 {
                     Instances.RemoveAt(i);
@@ -38,8 +38,7 @@ public abstract class UIBehaviourModel : UIModel
     }
 
     // Instance
-
-    public UIBehaviourModel()
+    protected UIBehaviourModel()
     {
         Instances.Add(this);
     }

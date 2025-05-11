@@ -18,18 +18,21 @@
 
 Buddy UI allow advanced UI elements customization for V Rising. Currently it works with Mouse+Keyboard mode only. It is represented by two control windows. 
  - Select different UI elements and adjust their visibility, position, scale and rotation
+ - Supports: Main Game Menu, Character HUD in game
  - UI layout is saved and loaded automatically so your custom layout persist through game launches
 
 ### Current Version Warnings
 
- - Individual skill buttons modififcation is still in WIP
+ - Individual skill buttons modififcation is still WIP
  - Some elements has (?) prefix that means it is likely impossible to modify this element while it is hidden, like notification or tutorial popup. Needs further investigation.
+ - Some elements has (!!) prefix that means they can have some weird offset between control panel and actual element placement on the screen
 
 ## Installation
 
  - Install [BepInExRC2](https://github.com/decaprime/VRising-Modding/releases/tag/1.733.2)
  - Download latest *.zip file form Releases
  - Unpack zip file contents to `VRising\BepInEx` folder
+ - Run the game, use default `PageDown` key to show/hide control panels
 
 ## Guide
 

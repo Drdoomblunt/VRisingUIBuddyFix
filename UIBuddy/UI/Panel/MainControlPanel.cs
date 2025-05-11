@@ -48,7 +48,7 @@ namespace UIBuddy.UI.Panel
             RootObject.SetActive(false);
 
             // Set size for the main panel
-            RootRect.sizeDelta = new Vector2(300, 300);
+            RootRect.sizeDelta = new Vector2(300, 330);
 
             // Add background image
             var bgImage = RootObject.AddComponent<Image>();
@@ -66,7 +66,7 @@ namespace UIBuddy.UI.Panel
             contentRect.pivot = new Vector2(0.5f, 0.5f);
             // Position below the title bar
             contentRect.offsetMin = new Vector2(0, 0);
-            contentRect.offsetMax = new Vector2(0, -35); // Height of the title bar
+            contentRect.offsetMax = new Vector2(0, -40); // Height of the title bar
 
             var mainLayout = UIFactory.SetLayoutGroup<VerticalLayoutGroup>(contentArea,
                 childControlWidth: true,
@@ -75,8 +75,7 @@ namespace UIBuddy.UI.Panel
                 padTop: 5,
                 padBottom: 5,
                 padLeft: 5,
-                padRight: 5,
-                childAlignment: TextAnchor.UpperCenter);
+                padRight: 5);
 
             // Create content rows
             CreateNameRow(contentArea);
@@ -176,14 +175,15 @@ namespace UIBuddy.UI.Panel
                 childControlWidth: true,
                 childControlHeight: true,
                 spacing: 10,
-                new Vector4(5, 5, 5, 5));
+                new Vector4(5, 5, 5, 5),
+                childAlignment: TextAnchor.MiddleLeft);
 
             UIFactory.SetLayoutElement(scaleRow, minHeight: 35, preferredHeight: 35);
 
             // Scale label
             var scaleLabel = UIFactory.CreateLabel(scaleRow, $"ScaleLabel_{nameof(MainControlPanel)}", "Scale",
-                alignment: TextAlignmentOptions.Left, fontSize: 16);
-            UIFactory.SetLayoutElement(scaleLabel.GameObject, minWidth: 70, preferredWidth: 70);
+                alignment: TextAlignmentOptions.MidlineLeft, fontSize: 16);
+            UIFactory.SetLayoutElement(scaleLabel.GameObject, minWidth: 70, preferredWidth: 70, minHeight: 35, preferredHeight: 35);
 
             // Scale slider
             var sliderRef = UIFactory.CreateSlider(scaleRow, $"ScaleSlider_{nameof(MainControlPanel)}");
@@ -209,14 +209,15 @@ namespace UIBuddy.UI.Panel
                 childControlWidth: true,
                 childControlHeight: true,
                 spacing: 10,
-                new Vector4(5, 5, 5, 5));
+                new Vector4(5, 5, 5, 5),
+                childAlignment: TextAnchor.MiddleLeft);
 
             UIFactory.SetLayoutElement(rotationRow, minHeight: 35, preferredHeight: 35);
 
             // Rotation label
             var rotationLabel = UIFactory.CreateLabel(rotationRow, $"RotationLabel_{nameof(MainControlPanel)}", "Rotation",
-                alignment: TextAlignmentOptions.Left, fontSize: 16);
-            UIFactory.SetLayoutElement(rotationLabel.GameObject, minWidth: 70, preferredWidth: 70);
+                alignment: TextAlignmentOptions.MidlineLeft, fontSize: 16);
+            UIFactory.SetLayoutElement(rotationLabel.GameObject, minWidth: 70, preferredWidth: 70, minHeight: 35, preferredHeight: 35);
 
             // Rotation slider
             var sliderRef = UIFactory.CreateSlider(rotationRow, $"RotationSlider_{nameof(MainControlPanel)}");
@@ -285,7 +286,7 @@ namespace UIBuddy.UI.Panel
                 spacing: 10,
                 new Vector4(5, 5, 5, 5));
 
-            UIFactory.SetLayoutElement(row, minHeight: 30, preferredHeight: 30);
+            UIFactory.SetLayoutElement(row, minHeight: 35, preferredHeight: 35);
 
             var buttonReload = UIFactory.CreateButton(row, $"ParseButton_{nameof(MainControlPanel)}", "Reload Elements");
             UIFactory.SetLayoutElement(buttonReload.GameObject, minWidth: 150, preferredWidth: 150, minHeight: 35,

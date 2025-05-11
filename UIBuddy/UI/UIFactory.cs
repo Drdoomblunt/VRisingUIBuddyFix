@@ -52,8 +52,8 @@ namespace UIBuddy.UI
 
             try
             {
-                //textComp.outlineWidth = 0.15f;
-                //textComp.outlineColor = Color.black;
+                textComp.outlineWidth = 0.15f;
+                textComp.outlineColor = Color.black;
             }
             catch (Exception)
             {

@@ -31,7 +31,7 @@ Buddy UI allow advanced UI elements customization for V Rising. Currently it wor
 
  - Install [BepInExRC2](https://github.com/decaprime/VRising-Modding/releases/tag/1.733.2)
  - Download latest *.zip file form Releases
- - Unpack zip file contents to `VRising\BepInEx` folder
+ - Unpack `BepInEx` folder from zip archive and replace `BepInEx` folder in VRising game root folder
  - Run the game, use default `PageDown` key to show/hide control panels
 
 ## Guide

@@ -601,7 +601,11 @@ public class ScrollPool<T> : UIBehaviourModel, IEnumerable<CellInfo> where T : I
         int poolStartIndex = Math.Max(0, topViewportIndex - (int)(ExtraPoolCells * 0.5f));
         poolStartIndex = Math.Min(Math.Max(0, DataSource.ItemCount - CellPool.Count), poolStartIndex);
 
-        float topStartPos = HeightCache[poolStartIndex].startPosition;
+        var hc = HeightCache[poolStartIndex];
+        if(hc == DataViewInfo.None)
+            return;
+
+        float topStartPos = hc.startPosition;
 
         float desiredAnchor;
         if (desiredMinY < HalfThreshold)

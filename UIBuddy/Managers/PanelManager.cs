@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Il2CppSystem.Xml.Serialization;
+using UIBuddy.Classes;
 using UIBuddy.UI;
 using UIBuddy.UI.Classes;
 using UIBuddy.UI.Panel;
@@ -11,15 +13,15 @@ namespace UIBuddy.Managers;
 
 public class PanelManager: IDisposable
 {
-    private Vector3 _previousMousePosition;
-    private MouseState.ButtonState _previousMouseButtonState;
+    private static Vector3 _previousMousePosition;
+    private static MouseState.ButtonState _previousMouseButtonState;
     private static readonly List<IUIElementDrag> DraggersList = new();
     public static bool WasAnyDragging;
     public static bool DraggerHandledThisFrame;
-    protected virtual bool MouseInTargetDisplay => true;
+    private static bool MouseInTargetDisplay => true;
     public static GameObject PoolHolder { get; private set; }
 
-    public static PanelManager Instance { get; private set; }
+   // public static PanelManager Instance { get; private set; }
     private static GameObject CanvasRoot { get; set; }
     private static CanvasScaler Scaler { get; set; }
     private static Canvas Canvas { get; set; }
@@ -29,77 +31,144 @@ public class PanelManager: IDisposable
     public static  MainControlPanel MainPanel { get; private set; }
     public static ElementListPanel ElementListPanel { get; private set; }
     private static bool _focusHandledThisFrame;
+    private static ScreenType _currentScreenType = ScreenType.MainMenu;
 
-    protected virtual bool ShouldUpdateFocus =>
+    private static volatile bool _isContentChanging;
+
+    public static ScreenType CurrentScreenType
+    {
+        get => _currentScreenType;
+        set
+        {
+            _currentScreenType = value; 
+            Plugin.Log.LogWarning($"{nameof(CurrentScreenType)} changed to {CurrentScreenType}");
+        }
+    }
+
+    /// <summary>
+    /// Dirty hacks to fix some bar UI elements
+    /// </summary>
+    public static List<string> ButtonBarFixList =
+    [
+        "Action Bar",
+        "Ability Bar"
+    ];
+
+    private static bool ShouldUpdateFocus =>
         MouseInTargetDisplay &&
         InputManager.Mouse.Button0 == MouseState.ButtonState.Down &&
         !WasAnyDragging;
 
     public PanelManager()
     {
-        Instance = this;
         CreateRootCanvas();
         CreateElementListPanel();
         CreateMainPanel();
     }
 
+    /// <summary>
+    /// Reloads all UI elements based on the current screen type.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public static void ReloadElements()
     {
-        var inheritAnchorParam = new PanelParameters
+        _isContentChanging = true;
+        try
         {
-            InheritAnchors = true
-        };
+            var inheritAnchorParam = new PanelParameters
+            {
+                InheritAnchors = true
+            };
 
-        AddDrag("BloodOrbParent", "Blood Orb HP", "ORB");
-        //AddDetachedDrag("BottomBar(Clone)|Content|TooltipParent|BloodPoolTooltip", "Blood Orb Tooltip Anchor", "BOTA");
+            ClearAllElements(false);
 
-        AddDrag("JournalParent(Clone)", "Journal", "JOU");
-        AddDrag("TargetInfoPanel(Clone)", "Target Info", "TGT");
+            //IMPORTANT! GameObject.Find() can't find inactive objects so we need to
+            //specify path to the object from the distinctly named parent that is always active
 
-        AddDrag("ClockParent3(Clone)|Content|Parent", "DayNight sphere", "SPHERE"); //daytime circle
-        AddDrag("MiniMapParent(Clone)|Root|Panel", "Minimap", "MAP"); //minimap
-        AddDrag("BackgroundBig", "Clock+Minimap Background", "Background"); //clock/minimap background
+            switch (CurrentScreenType)
+            {
+                case ScreenType.MainMenu:
+                {
+                    AddDrag("MainMenu_V2(Clone)|SLS logo", "Logo", "Logo");
+                    AddDrag("MainMenu_V2(Clone)|Content|NewsPanelParent", "News", "News");
+                    AddDrag("MainMenu_V2(Clone)|Content|SideBar", "Main Menu", "Menu");
+                    AddDrag("MainMenu_V2(Clone)|Content|SideBar|LinksParentNode", "(!!)Links", "Links",
+                        prms: inheritAnchorParam);
+                }
+                    break;
+                case ScreenType.CharacterHUD:
+                {
+                    AddDrag("BottomBarCanvas|BottomBar(Clone)|Content|BloodOrbParent", "Blood Orb HP", "ORB");
+                    //AddDetachedDrag("BottomBar(Clone)|Content|TooltipParent|BloodPoolTooltip", "Blood Orb Tooltip Anchor", "BOTA");
 
-        AddDrag("BottomBar(Clone)", "Full Bottom Bar", "FBB"); //bottom bar
-        AddDrag("BottomBar(Clone)|Content|Background|Background", "Bottom Bar Background", "Bar Background"); //bottom bar fade
-        AddDrag("BottomBar(Clone)|Content|Background|DarkFade", "Bottom Bar Fade", "Bar Fade"); //bottom bar bg
+                    AddDrag("HUDCanvas(Clone)|JournalCanvas|JournalParent(Clone)", "Journal", "JOU");
+                    AddDrag("HUDCanvas(Clone)|TargetInfoPanelCanvas|TargetInfoPanel(Clone)", "Target Info", "TGT");
 
-        AddDrag("BottomBar(Clone)|Content|Background|ActionBar", "Action Bar", "ACBAR", prms: inheritAnchorParam); //action bar
-        AddDrag("BottomBar(Clone)|Content|Background|AbilityBar", "Ability Bar", "ABBAR", prms: inheritAnchorParam); //abilityBar bar
+                    AddDrag("ClockParent3(Clone)|Content|Parent", "DayNight sphere", "SPHERE"); //daytime circle
+                    AddDrag("MiniMapParent(Clone)|Root|Panel", "Minimap", "MAP"); //minimap
+                    AddDrag("ClockParent3(Clone)|Content|BackgroundBig", "Clock+Minimap Background", "Background"); //clock/minimap background
 
-        AddDrag("BottomBar(Clone)|Content|Background|ActionBar|ActionBarEntry", "Action Bar Button 1", "ACB1"); //ab1
-        AddDrag("BottomBar(Clone)|Content|Background|ActionBar|ActionBarEntry (1)", "Action Bar Button 2", "ACB2"); //ab2
-        AddDrag("AbilityBarEntry_Primary", "AB primary", "ABP");
+                    AddDrag("BottomBarCanvas|BottomBar(Clone)", "Full Bottom Bar", "FBB"); //bottom bar
+                    AddDrag("BottomBar(Clone)|Content|Background|Background", "Bottom Bar Background",
+                        "Bar Background"); //bottom bar fade
+                    AddDrag("BottomBar(Clone)|Content|Background|DarkFade", "Bottom Bar Fade",
+                        "Bar Fade"); //bottom bar bg
 
-        AddDrag("Buffs", "Buffs", "BUFF");
-        AddDrag("Debuffs", "Debuffs", "DBUFF");
 
-        AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|HUDAlertParent(Clone)|Container", "(?)Right Alerts", "RA"); //right alerts
-        AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|DangerTextParent(Clone)", "(?)Bottom Danger", "DANGER",
-            panelParentGameObjectName: "HUDCanvas(Clone)|Canvas|HUDOther|DangerTextParent(Clone)|Alpha|Background",
-            prms: inheritAnchorParam); //bottom danger text
-        AddDrag("HUDCanvas(Clone)|Canvas|HUDTutorial|TutorialParent(Clone)", "(?)Tutorial", "Tutorial", prms: inheritAnchorParam); //
+                    AddDrag("BottomBar(Clone)|Content|Background|ActionBar", "Action Bar", "ACBAR",
+                        prms: inheritAnchorParam); //action bar
 
-        var prms = new PanelParameters
+                    AddDrag("BottomBar(Clone)|Content|Background|AbilityBar", "Ability Bar", "ABBAR",
+                        prms: inheritAnchorParam); //abilityBar bar
+
+                    AddDrag("BottomBar(Clone)|Content|Background|ActionBar|ActionBarEntry", "Action Bar Button 1",
+                        "ACB1"); //ab1
+                    AddDrag("BottomBar(Clone)|Content|Background|ActionBar|ActionBarEntry (1)", "Action Bar Button 2",
+                        "ACB2"); //ab2
+                    AddDrag("BottomBar(Clone)|Content|Background|AbilityBar|AbilityBarEntry_Primary", "AB primary", "ABP");
+
+                    AddDrag("BottomBar(Clone)|Content|BuffBar|Buffs", "Buffs", "BUFF");
+                    AddDrag("BottomBar(Clone)|Content|BuffBar|Debuffs", "Debuffs", "DBUFF");
+
+                    AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|HUDAlertParent(Clone)|Container", "(?)Right Alerts",
+                        "RA"); //right alerts
+                    AddDrag("HUDCanvas(Clone)|Canvas|HUDOther|DangerTextParent(Clone)", "(?)Bottom Danger", "DANGER",
+                        panelParentGameObjectName:
+                        "HUDCanvas(Clone)|Canvas|HUDOther|DangerTextParent(Clone)|Alpha|Background",
+                        prms: inheritAnchorParam); //bottom danger text
+                    AddDrag("HUDCanvas(Clone)|Canvas|HUDTutorial|TutorialParent(Clone)", "(?)Tutorial", "Tutorial",
+                        prms: inheritAnchorParam); //
+
+                    var prms = new PanelParameters
+                    {
+                        PositionValidation = false,
+                        InitialPosition = new Vector2(0, 0),
+                    };
+                    AddDetachedDrag("HUDChatParent|ChatWindow(Clone)|Content", "(!!)Chat Window", "CHAT", prms); //chat
+
+                    //AddDrag("Version_HUD", "Clan Members");
+                    //AddDrag("HUDClan", "Clan Members", "CLAN"); //clan
+                    // _pm.AddDrag("HUDTutorial"); //tutorial
+                    // _pm.AddDrag("HUDRecipeTrackerParent"); //recipe tracker
+                }
+                    break;
+                case ScreenType.EscapeMenu:
+                    break;
+                case ScreenType.None:
+                    // No specific screen type, do nothing
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(CurrentScreenType), CurrentScreenType, null);
+            }
+
+            MainPanel.RootRect.SetAsLastSibling();
+            ElementListPanel.RootRect.SetAsLastSibling();
+            ElementListPanel.RefreshList();
+        }
+        finally
         {
-            PositionValidation = false,
-            InitialPosition = new Vector2(0, 0),
-        };
-        AddDetachedDrag("HUDChatParent|ChatWindow(Clone)|Content", "(!!)Chat Window", "CHAT", prms); //chat
-
-        //AddDrag("Version_HUD", "Clan Members");
-        //AddDrag("HUDClan", "Clan Members", "CLAN"); //clan
-        // _pm.AddDrag("HUDTutorial"); //tutorial
-        // _pm.AddDrag("HUDRecipeTrackerParent"); //recipe tracker
-
-        /*_pm.AddDrag("SLS logo");
-        _pm.AddDrag("NewsPanelParent");
-        _pm.AddDrag("SideBar");
-        _pm.AddDrag("LinksParentNode");*/
-        // _pm.AddDrag(null);
-
-        MainPanel.RootRect.SetAsLastSibling();
-        ElementListPanel.RootRect.SetAsLastSibling();
+            _isContentChanging = false;
+        }
     }
 
     private static void CreateElementListPanel()
@@ -110,6 +179,9 @@ public class PanelManager: IDisposable
         Plugin.Log.LogInfo("Elements list panel created and initialized successfully");
     }
 
+    /// <summary>
+    /// Creates the main control panel.
+    /// </summary>
     private static void CreateMainPanel()
     {
         try
@@ -127,6 +199,9 @@ public class PanelManager: IDisposable
         }
     }
 
+    /// <summary>
+    /// Creates the root canvas for the UI.
+    /// </summary>
     private static void CreateRootCanvas()
     {
         CanvasRoot = new GameObject("Canvas");
@@ -166,9 +241,9 @@ public class PanelManager: IDisposable
     }
 
 
-    public void Update()
+    public static void Update()
     {
-        if(!MainPanel.IsRootActive)
+        if(!MainPanel.IsRootActive || _isContentChanging)
             return;
 
         if (ConfigManager.SelectPanelsWithMouse && ShouldUpdateFocus)
@@ -177,6 +252,7 @@ public class PanelManager: IDisposable
         foreach (var panel in DraggersList.Select(a=> a.Panel))
         {
             panel.Update();
+            if (_isContentChanging) return;
         }
 
         if (!DraggerHandledThisFrame)
@@ -186,7 +262,7 @@ public class PanelManager: IDisposable
         _focusHandledThisFrame = false;
     }
 
-    protected virtual void UpdateFocus()
+    protected static void UpdateFocus()
     {
         // If another UIBase has already handled a user's click for focus, don't update it for this UIBase.
         if (!_focusHandledThisFrame)
@@ -231,7 +307,7 @@ public class PanelManager: IDisposable
         return panel == MainPanel || panel == ElementListPanel;
     }
 
-    protected virtual void UpdateDraggers()
+    private static void UpdateDraggers()
     {
         if (!MouseInTargetDisplay)
             return;
@@ -258,7 +334,7 @@ public class PanelManager: IDisposable
 
                 instance.Update(state, mousePos);
 
-                if (DraggerHandledThisFrame)
+                if (DraggerHandledThisFrame || _isContentChanging)
                     break;
             }
                
@@ -266,9 +342,10 @@ public class PanelManager: IDisposable
 
         if (WasAnyDragging && state.HasFlag(MouseState.ButtonState.Up))
         {
+            WasAnyDragging = false;
+            if(_isContentChanging) return;
             foreach (var instance in DraggersList)
                 instance.WasDragging = false;
-            WasAnyDragging = false;
         }
     }
 
@@ -294,10 +371,18 @@ public class PanelManager: IDisposable
         {
             DraggersList.Add(element.Dragger);
             ElementListPanel.AddElement(element);
-        }
+        } 
+        else element.Dispose();
     }
 
-
+    /// <summary>
+    /// Adds a panel with detached dragger
+    /// </summary>
+    /// <param name="name">Name</param>
+    /// <param name="friendlyName">Friendly name</param>
+    /// <param name="shortName"></param>
+    /// <param name="prms"></param>
+    /// <returns></returns>
     private static DetachedPanel AddDetachedDrag(string name, string friendlyName, string shortName, PanelParameters prms = null)
     {
         if (DraggersList.FirstOrDefault(a => a.Panel.Name == friendlyName) != null)
@@ -318,15 +403,40 @@ public class PanelManager: IDisposable
         return null;
     }
 
-    public void Dispose()
+    /// <summary>
+    /// Clear all UI elements from the list by conditions
+    /// </summary>
+    /// <param name="clearControlPanels">Clear all objects even control panels</param>
+    private static void ClearAllElements(bool clearControlPanels = true)
     {
-        foreach (var panel in DraggersList.Select(a=> a.Panel))
+        var elements = DraggersList.Where(a => clearControlPanels || !IsControlPanel(a.Panel)).ToArray();
+        foreach (var panel in elements.Select(a => a.Panel))
             panel.Dispose();
-        DraggersList.Clear();
-        UnityEngine.Object.Destroy(CanvasRoot);
-        UnityEngine.Object.Destroy(PoolHolder);
+        DraggersList.RemoveAll(a=> elements.Contains(a));
+
+        if (!clearControlPanels)
+            ElementListPanel.ClearList();
     }
 
+    public void Dispose()
+    {
+        _isContentChanging = true;
+        try
+        {
+            ClearAllElements();
+            UnityEngine.Object.Destroy(CanvasRoot);
+            UnityEngine.Object.Destroy(PoolHolder);
+        }
+        finally
+        {
+            _isContentChanging = false;
+        }
+    }
+
+    /// <summary>
+    /// Selects a panel and shows its outline
+    /// </summary>
+    /// <param name="panel">Panel</param>
     public static void SelectPanel(IGenericPanel panel)
     {
         if(panel == MainPanel || panel == ElementListPanel)
@@ -339,7 +449,7 @@ public class PanelManager: IDisposable
         // do not select inactive panel
         if (!panel.IsRootActive)
         {
-            MainPanel.SelectedElementPanel = null;
+            MainPanel.DeselectCurrentPanel();
             return;
         }
 
@@ -351,11 +461,17 @@ public class PanelManager: IDisposable
         MainPanel.SelectedElementPanel = panel as ElementPanel;
     }
 
+    /// <summary>
+    /// Sets all panels active or inactive
+    /// </summary>
+    /// <param name="value">Is Active</param>
     public static void SetPanelsActive(bool value)
     {
         foreach (var panel in GetAllPanels())
         {
             panel.SetActive(value);
+            if(value)
+                panel.ShowPanelOutline(false);
         }
     }
 

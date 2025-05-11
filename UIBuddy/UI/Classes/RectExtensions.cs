@@ -6,25 +6,23 @@ namespace UIBuddy.UI.Classes;
 
 public static class RectExtensions
 {
-    // Window Anchors helpers
-    internal static string RectAnchorsToString(this RectTransform rect)
+    #region Handle Size
+
+    internal static string RectSizeToString(this RectTransform rect)
     {
         if (!rect)
-            throw new ArgumentNullException("rect");
+            throw new ArgumentNullException(nameof(rect));
 
-        return string.Format(CultureInfo.InvariantCulture, "{0},{1}", new object[]
-        {
-            rect.rect.width,
-            rect.rect.height
-        });
+        return string.Format(CultureInfo.InvariantCulture, "{0},{1}",rect.rect.width,
+            rect.rect.height);
     }
 
-    internal static void SetAnchorsFromString(this RectTransform panel, string stringAnchors)
+    internal static void SetSizeFromString(this RectTransform panel, string stringAnchors)
     {
         if (string.IsNullOrEmpty(stringAnchors))
-            throw new ArgumentNullException("stringAnchors");
+            throw new ArgumentNullException(nameof(stringAnchors));
 
-        string[] split = stringAnchors.Split(',');
+        var split = stringAnchors.Split(',');
 
         if (split.Length != 2)
             throw new Exception($"stringAnchors split is unexpected length: {split.Length}");
@@ -35,16 +33,37 @@ public static class RectExtensions
         panel.sizeDelta = new Vector2(width, height);
     }
 
+    #endregion
+
+    #region Handle Position
+
     internal static string RectPositionToString(this RectTransform rect)
     {
         if (!rect)
-            throw new ArgumentNullException("rect");
+            throw new ArgumentNullException(nameof(rect));
 
-        return string.Format(CultureInfo.InvariantCulture, "{0},{1}", new object[]
-        {
-            rect.anchoredPosition.x, rect.anchoredPosition.y
-        });
+        return string.Format(CultureInfo.InvariantCulture, "{0},{1}", 
+            rect.anchoredPosition.x, rect.anchoredPosition.y);
     }
+
+    internal static void SetPositionFromString(this RectTransform rect, string stringPosition)
+    {
+        if (string.IsNullOrEmpty(stringPosition))
+            throw new ArgumentNullException(nameof(stringPosition));
+
+        var split = stringPosition.Split(',');
+
+        if (split.Length != 2)
+            throw new Exception($"stringPosition split is unexpected length: {split.Length}");
+
+        var x = float.Parse(split[0], CultureInfo.InvariantCulture);
+        var y = float.Parse(split[1], CultureInfo.InvariantCulture);
+        rect.anchoredPosition = new Vector2(x, y);
+    }
+
+    #endregion
+
+    #region Handle Rotation
 
     internal static string RectRotationToString(this RectTransform rect)
     {
@@ -57,46 +76,35 @@ public static class RectExtensions
         });
     }
 
+    internal static void SetRotationFromString(this RectTransform rect, string stringRotation)
+    {
+        if (string.IsNullOrEmpty(stringRotation))
+            throw new ArgumentNullException(nameof(stringRotation));
+
+        var split = stringRotation.Split(',');
+
+        if (split.Length != 4)
+            throw new Exception($"stringPosition split is unexpected length: {split.Length}");
+
+        var vector = new Quaternion
+        {
+            x = float.Parse(split[0], CultureInfo.InvariantCulture),
+            y = float.Parse(split[1], CultureInfo.InvariantCulture),
+            z = float.Parse(split[2], CultureInfo.InvariantCulture),
+            w = float.Parse(split[3], CultureInfo.InvariantCulture)
+        };
+        rect.rotation = vector;
+    }
+    #endregion
+
+    #region Handle Scale
+
     internal static string RectScaleToString(this RectTransform rect)
     {
         if (!rect)
             throw new ArgumentNullException(nameof(rect));
 
         return rect.localScale.x.ToString(CultureInfo.InvariantCulture);
-    }
-
-    internal static void SetPositionFromString(this RectTransform rect, string stringPosition)
-    {
-        if (string.IsNullOrEmpty(stringPosition))
-            throw new ArgumentNullException(nameof(stringPosition));
-
-        string[] split = stringPosition.Split(',');
-
-        if (split.Length != 2)
-            throw new Exception($"stringPosition split is unexpected length: {split.Length}");
-
-        Vector2 vector = rect.anchoredPosition;
-        vector.x = float.Parse(split[0], CultureInfo.InvariantCulture);
-        vector.y = float.Parse(split[1], CultureInfo.InvariantCulture);
-        rect.anchoredPosition = vector;
-    }
-
-    internal static void SetRotationFromString(this RectTransform rect, string stringRotation)
-    {
-        if (string.IsNullOrEmpty(stringRotation))
-            throw new ArgumentNullException(nameof(stringRotation));
-
-        string[] split = stringRotation.Split(',');
-
-        if (split.Length != 4)
-            throw new Exception($"stringPosition split is unexpected length: {split.Length}");
-
-        var vector = rect.rotation;
-        vector.x = float.Parse(split[0], CultureInfo.InvariantCulture);
-        vector.y = float.Parse(split[1], CultureInfo.InvariantCulture);
-        vector.z = float.Parse(split[2], CultureInfo.InvariantCulture);
-        vector.w = float.Parse(split[3], CultureInfo.InvariantCulture);
-        rect.rotation = vector;
     }
 
     internal static void SetScaleFromString(this RectTransform rect, string value)
@@ -108,11 +116,13 @@ public static class RectExtensions
         rect.localScale = new Vector3(floatValue, floatValue, 1f);
     }
 
+    #endregion
+
     internal static void SetPivot(this RectTransform rect, Vector2 pivot)
     {
-        Vector2 size = rect.rect.size;
-        Vector2 deltaPivot = rect.pivot - pivot;
-        Vector3 deltaPosition = new Vector3(deltaPivot.x * size.x, deltaPivot.y * size.y);
+        var size = rect.rect.size;
+        var deltaPivot = rect.pivot - pivot;
+        var deltaPosition = new Vector3(deltaPivot.x * size.x, deltaPivot.y * size.y);
         rect.pivot = pivot;
         rect.localPosition -= deltaPosition;
     }

@@ -47,25 +47,30 @@ public class ElementPanel: GenericPanelBase
 
     public override bool Initialize()
     {
-        if (RootObject == null)
+        try
         {
-            Plugin.Log.LogWarning($"Failed to initialize UIElement: {Name}");
+            if (RootObject == null)
+            {
+                Plugin.Log.LogWarning($"Failed to initialize UIElement: {Name}");
+                return false;
+            }
+
+            OwnerCanvasScaler = RootObject.GetComponent<CanvasScaler>();
+
+            if (OwnerCanvasScaler != null)
+                OriginalScaleFactor = OwnerCanvasScaler.scaleFactor;
+            Transform = RootObject.GetComponent<Transform>();
+            if (OwnerCanvasScaler == null)
+                OriginalScaleFactor = Transform.localScale.x;
+
+            ConstructUI();
+
+            return true;
+        }
+        catch
+        {
             return false;
         }
-
-        OwnerCanvasScaler = RootObject.GetComponent<CanvasScaler>();
-
-        if (OwnerCanvasScaler != null)
-            OriginalScaleFactor = OwnerCanvasScaler.scaleFactor;
-        Transform = RootObject.GetComponent<Transform>();
-        if(OwnerCanvasScaler == null)
-            OriginalScaleFactor = Transform.localScale.x;
-
-
-        if(!base.Initialize())
-            return false;
-
-        return true;
     }
 
     protected override void ConstructUI()
@@ -90,10 +95,19 @@ public class ElementPanel: GenericPanelBase
         else
         {
             // Set anchors manually using individual values instead of Vector2
-            CustomUIRect.anchorMin = new Vector2(0f, 0f);
-            CustomUIRect.anchorMax = new Vector2(1f, 1f);
-            CustomUIRect.anchoredPosition = new Vector2(0f, 0f);
-            CustomUIRect.sizeDelta = new Vector2(0f, 0f);
+            CustomUIRect.anchorMin = Vector2.zero;
+            CustomUIRect.anchorMax = Vector2.one;
+            CustomUIRect.anchoredPosition = Vector2.zero;
+            CustomUIRect.sizeDelta = Vector2.zero;
+
+            //CustomUIRect.offsetMin = Vector2.zero;
+            //CustomUIRect.offsetMax = Vector2.zero;
+            //CustomUIRect.pivot = new Vector2(0.5f, 0.5f);
+        }
+
+        if (PanelManager.ButtonBarFixList.Contains(Name))
+        {
+            CustomUIRect.sizeDelta = new Vector2(50f, 50f);
         }
 
         ConstructDrag(CustomPanelParentObject ?? CustomUIObject ?? RootObject);
@@ -159,10 +173,11 @@ public class ElementPanel: GenericPanelBase
                         }
                     }
                 }
-
+                
                 // Activate the UI
                 if (ConfigManager.IsModVisible)
                     CustomUIObject.SetActive(true);
+                
                 Outline?.SetActive(false);
 
                 LoadConfigValues();
@@ -247,7 +262,7 @@ public class ElementPanel: GenericPanelBase
         if(!RootObject.activeSelf) return;
         CustomUIObject.SetActive(value);
         if(!value && PanelManager.MainPanel.SelectedElementPanel == this)
-            PanelManager.MainPanel.SelectedElementPanel = null;
+            PanelManager.MainPanel.DeselectCurrentPanel();
     }
 
     public override void SetRootActive(bool value)
@@ -258,6 +273,8 @@ public class ElementPanel: GenericPanelBase
 
     public override void Dispose()
     {
-        Object.Destroy(CustomUIObject);
+        if(CustomUIObject != null)
+            Object.Destroy(CustomUIObject);
+        Dragger?.Dispose();
     }
 }

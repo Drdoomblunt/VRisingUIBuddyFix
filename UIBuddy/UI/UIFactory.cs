@@ -87,9 +87,9 @@ namespace UIBuddy.UI
             result.Toggle.isOn = true;
             SetDefaultSelectableValues(result.Toggle);
             // need a second reference so we can use it inside the lambda, since 'toggle' is an out var.
-            var t2 = result.Toggle;
-            result.Toggle.onValueChanged.AddListener(_ => { t2.OnDeselect(null); });
-            result.Toggle.onValueChanged.AddListener(value => result.OnValueChanged?.Invoke(value));
+            //var t2 = result.Toggle;
+            //result.Toggle.onValueChanged.AddListener(_ => { t2.OnDeselect(null); });
+            //result.Toggle.onValueChanged.AddListener(value => result.OnValueChanged?.Invoke(value));
 
             // Check mark background
 

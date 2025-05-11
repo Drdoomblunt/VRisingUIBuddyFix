@@ -22,7 +22,7 @@ public class DataHeightCache<T> where T : ICell
 
     public DataViewInfo this[int index]
     {
-        get => _heightCache[index];
+        get => _heightCache.Count == 0 ? DataViewInfo.None : _heightCache[index];
         set => SetIndex(index, value);
     }
 

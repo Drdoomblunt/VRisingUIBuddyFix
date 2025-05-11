@@ -35,7 +35,7 @@ public class DetachedPanel: ElementPanel
             return;
         TargetRect = TargetObject.GetComponent<RectTransform>();
         
-        RootRect.anchoredPosition = TargetRect.anchoredPosition;
+        //RootRect.anchoredPosition = TargetRect.anchoredPosition;
         //RootRect.anchorMin = TargetRect.anchorMin;
         //RootRect.anchorMax = TargetRect.anchorMax;
         //RootRect.pivot = TargetRect.pivot;
@@ -47,7 +47,7 @@ public class DetachedPanel: ElementPanel
 
     public override void Update()
     {
-        if(!IsRootActive) return;
+        if(!CustomUIObject?.activeSelf ?? false) return;
 
         var shouldSave = false;
         if (_oldPosition.HasValue)
@@ -56,7 +56,8 @@ public class DetachedPanel: ElementPanel
             if (Math.Abs(RootRect.sizeDelta.x - 50f) > TOLERANCE ||
                 Math.Abs(RootRect.sizeDelta.y - 50f) > TOLERANCE)
             {
-                RootRect.sizeDelta = DefaultPanelSize;
+                if(Parameters.InheritAnchors != true)
+                    RootRect.sizeDelta = DefaultPanelSize;
             }
 
             if (Math.Abs(Transform.localEulerAngles.z - _oldRotation) > TOLERANCE)
@@ -85,8 +86,8 @@ public class DetachedPanel: ElementPanel
         _oldScale = TargetRect.localScale;
         _oldRotation = TargetRect.localEulerAngles.z;
 
-        if(shouldSave)
-            Save();
+        //if(shouldSave)
+        //    Save();
     }
 
     private void EnsureValidPositionEx()
@@ -215,39 +216,61 @@ public class DetachedPanel: ElementPanel
 
     public override bool Initialize()
     {
-        if (RootObject == null)
+        try
         {
-            Plugin.Log.LogWarning($"Failed to initialize UIElement: {Name}");
+            if (RootObject == null)
+            {
+                Plugin.Log.LogWarning($"Failed to initialize UIElement: {Name}");
+                return false;
+            }
+
+            OwnerCanvasScaler = RootObject.GetComponent<CanvasScaler>();
+
+            if (OwnerCanvasScaler != null)
+                OriginalScaleFactor = OwnerCanvasScaler.scaleFactor;
+            Transform = RootObject.GetComponent<Transform>();
+            if (OwnerCanvasScaler == null)
+                OriginalScaleFactor = Transform.localScale.x;
+
+            ConstructUI();
+
+            return true;
+        }
+        catch
+        {
             return false;
         }
-
-        OwnerCanvasScaler = RootObject.GetComponent<CanvasScaler>();
-
-        if (OwnerCanvasScaler != null)
-            OriginalScaleFactor = OwnerCanvasScaler.scaleFactor;
-        Transform = RootObject.GetComponent<Transform>();
-        if(OwnerCanvasScaler == null)
-            OriginalScaleFactor = Transform.localScale.x;
-
-        ConstructUI();
-
-        return true;
     }
 
     protected override void ConstructUI()
     {
-        RootObject.SetActive(false);
         // Get or add RectTransform
         CustomUIObject = UIFactory.CreateUIObject($"DetachedPanel_{Name}", RootObject);
         CustomUIRect = CustomUIObject.GetComponent<RectTransform>();
+        CustomUIObject.SetActive(false);
+
+        if (Parameters?.InheritAnchors == true)
+        {
+            // Inherit anchors from the parent object
+            var from = CustomPanelParentObject != null
+                ? CustomPanelParentObject.GetComponent<RectTransform>()
+                : TargetRect;
+            CustomUIRect.anchorMin = from.anchorMin;
+            CustomUIRect.anchorMax = from.anchorMax;
+            CustomUIRect.pivot = from.pivot;
+            CustomUIRect.sizeDelta = new Vector2(from.rect.width, from.rect.height);
+            CustomUIRect.anchoredPosition = from.anchoredPosition;
+        }
+        else
+        {
+            // Set anchors manually using individual values instead of Vector2
+            CustomUIRect.anchorMin = Vector2.zero;
+            CustomUIRect.anchorMax = Vector2.one;
+            CustomUIRect.anchoredPosition = Vector2.zero;
+            CustomUIRect.sizeDelta = Vector2.zero;
+        }
 
         ConstructDrag(CustomPanelParentObject ?? CustomUIObject ?? RootObject);
-
-        // Set anchors manually using individual values instead of Vector2
-        CustomUIRect.anchorMin = new Vector2(0, 0);
-        CustomUIRect.anchorMax = new Vector2(1, 1);
-        CustomUIRect.anchoredPosition = new Vector2(0, 0);
-        CustomUIRect.sizeDelta = new Vector2(0, 0);
 
         // Add background image
         var bgImage = CustomUIObject.AddComponent<Image>();
@@ -271,7 +294,7 @@ public class DetachedPanel: ElementPanel
                 {
                     Outline.OutlineColor = Theme.ElementOutlineColor;
                     Outline.LineWidth = 2f; // Adjust as needed
-                    Outline.UpdateRect(RootRect);
+                    //Outline.UpdateRect(RootRect);
                 }
 
                 if (!string.IsNullOrEmpty(_shortName))
@@ -311,19 +334,23 @@ public class DetachedPanel: ElementPanel
                     }
                 }
 
-                // Activate the UI
-                if(ConfigManager.IsModVisible)
-                    RootObject.SetActive(true);
-                Outline?.SetActive(false);
-
-                if (LoadConfigValues())
-                    TargetRect.anchoredPosition = RootRect.anchoredPosition;
-
-                RootRect.sizeDelta = DefaultPanelSize;
-                CustomUIRect.sizeDelta = DefaultPanelSize;
-
                 if (Parameters?.InitialPosition != null)
                     RootRect.anchoredPosition = Parameters.InitialPosition.Value;
+
+                Outline?.SetActive(false);
+
+                LoadConfigValues();
+
+                if (Parameters?.InheritAnchors != true)
+                {
+                    RootRect.sizeDelta = DefaultPanelSize;
+                    CustomUIRect.sizeDelta = DefaultPanelSize;
+                }
+
+                // Activate the UI
+                if (ConfigManager.IsModVisible)
+                    CustomUIObject.SetActive(true);
+
             }
         }
         catch (Exception ex)
@@ -338,7 +365,7 @@ public class DetachedPanel: ElementPanel
     {
         CustomUIObject.SetActive(value);
         if (!value && PanelManager.MainPanel.SelectedElementPanel == this)
-            PanelManager.MainPanel.SelectedElementPanel = null;
+            PanelManager.MainPanel.DeselectCurrentPanel();
     }
 
     public override void SetRootActive(bool value)
@@ -346,5 +373,33 @@ public class DetachedPanel: ElementPanel
         RootObject.SetActive(value);
         TargetObject.SetActive(value);
         Save();
+    }
+
+    protected override void Save()
+    {
+        if (ApplyingSaveData) return;
+
+        SetSaveDataToConfigValue(TargetRect);
+    }
+
+    protected override bool LoadConfigValues()
+    {
+        ApplyingSaveData = true;
+        // apply panel save data or revert to default
+        try
+        {
+            return ApplyLoadedData(TargetRect);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.LogError($"Exception loading panel save data: {ex}");
+            EnsureValidPosition();
+            return false;
+        }
+        finally
+        {
+            ApplyingSaveData = false;
+        }
+
     }
 }

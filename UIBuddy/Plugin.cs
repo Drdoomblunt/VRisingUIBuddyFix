@@ -5,6 +5,7 @@ using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
 using UIBuddy.Behaviors;
+using UIBuddy.Classes;
 using UIBuddy.KeyBinds;
 using UIBuddy.Managers;
 using UIBuddy.UI;
@@ -50,13 +51,18 @@ public class Plugin : BasePlugin
         ClassInjector.RegisterTypeInIl2Cpp<RectOutline>();
     }
 
-    public static void UIOnInitialize()
+    public static void UIOnInitialize(ScreenType type)
     {
         try
         {
-            if (IsInitialized) return;
+            PanelManager.CurrentScreenType = type;
+            if (IsInitialized)
+            {
+                PanelManager.ReloadElements();
+                return;
+            }
             IsInitialized = true;
-
+            
             Log.LogInfo("Initializing UIBuddy...");
             EnsureThemeInitialized();
             ConfigManager.Initialize();

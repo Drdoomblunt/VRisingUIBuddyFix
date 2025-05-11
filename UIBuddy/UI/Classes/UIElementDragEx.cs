@@ -5,7 +5,7 @@ using UIBuddy.Managers;
 
 namespace UIBuddy.UI.Classes;
 
-public class UIElementDragEx: IUIElementDrag
+public class UIElementDragEx: IUIElementDrag, IDisposable
 {
     // Instance
     public bool AllowDrag => true;
@@ -17,10 +17,10 @@ public class UIElementDragEx: IUIElementDrag
     private Vector2 _initialMousePos;
     private Vector2 _initialValue;
 
-    public IGenericPanel Panel { get; }
+    public IGenericPanel Panel { get; private set; }
 
     // Dragging
-    private RectTransform DraggableArea { get; }
+    private RectTransform _draggableArea;
 
     public bool WasDragging { get; set; }
 
@@ -32,7 +32,7 @@ public class UIElementDragEx: IUIElementDrag
 
     public UIElementDragEx(GameObject dragObject, IGenericPanel panel)
     {
-        DraggableArea = dragObject.GetComponent<RectTransform>();
+        _draggableArea = dragObject.GetComponent<RectTransform>();
         Rect = panel.RootObject.GetComponent<RectTransform>();
         Panel = panel;
     }
@@ -42,8 +42,8 @@ public class UIElementDragEx: IUIElementDrag
         if(IsPinned || !AllowDrag || !Panel.IsRootActive) 
             return;
 
-        Vector3 dragPos = DraggableArea.InverseTransformPoint(rawMousePos);
-        bool inDragPos = DraggableArea.rect.Contains(dragPos);
+        Vector3 dragPos = _draggableArea.InverseTransformPoint(rawMousePos);
+        bool inDragPos = _draggableArea.rect.Contains(dragPos);
 
         if (state.HasFlag(MouseState.ButtonState.Clicked))
         {
@@ -65,7 +65,7 @@ public class UIElementDragEx: IUIElementDrag
                 OnDrag();
             }
         }
-        else if (state.HasFlag(MouseState.ButtonState.Released))
+        else if (state.HasFlag(MouseState.ButtonState.Up))
         {
             if (WasDragging)
             {
@@ -105,4 +105,10 @@ public class UIElementDragEx: IUIElementDrag
 
     #endregion
 
+    public void Dispose()
+    {
+        _draggableArea = null;
+        Rect = null;
+        Panel = null;
+    }
 }

@@ -3,6 +3,7 @@ using ProjectM;
 using ProjectM.UI;
 using System;
 using TMPro;
+using UIBuddy.Classes;
 using UIBuddy.UI;
 
 namespace UIBuddy.Patches;
@@ -16,9 +17,9 @@ public static class InitializationPatch
     {
         try
         {
-            if (Plugin.IsInitialized) return;
-            Plugin.Log.LogInfo("Creating Controls");
-            Plugin.UIOnInitialize();
+            //if (Plugin.IsInitialized) return;
+            //Plugin.Log.LogInfo("Creating Controls");
+            Plugin.UIOnInitialize(ScreenType.CharacterHUD);
         }
         catch (Exception ex)
         {
@@ -39,17 +40,6 @@ public static class InitializationPatch
         {
             Plugin.Log.LogError(ex.ToString());
         }
-    }
-
-    [HarmonyPatch(typeof(EscapeMenuView), "OnDestroy")]
-    [HarmonyPrefix]
-    private static void EscapeMenuViewOnDestroyPrefix()
-    {
-        if (!Plugin.IsInitialized) return;
-
-        // User has left the server. Reset all ui
-        Plugin.IsInitialized = false;
-        Plugin.Reset();
     }
 
     [HarmonyPostfix]

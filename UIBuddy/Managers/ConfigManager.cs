@@ -27,7 +27,7 @@ namespace UIBuddy.Managers
             _cfgSelectPanelsWithMouse = Plugin.Instance.Config.Bind(CATEGORY_SETTINGS, nameof(SelectPanelsWithMouse), false,
                 "Enable selecting panels with mouse");
 
-            _cfgIsModVisible = Plugin.Instance.Config.Bind(CATEGORY_SETTINGS, nameof(IsModVisible), true,
+            _cfgIsModVisible = Plugin.Instance.Config.Bind(CATEGORY_SETTINGS, nameof(IsModVisible), false,
                 "Are mod panels visible");
         }
     }

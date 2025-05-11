@@ -23,6 +23,7 @@ namespace UIBuddy.UI.Panel
         private GameObject _titleBar;
         private ToggleRef _selectPanelsToggleRef;
         private ToggleRef _closeAllToggleRef;
+        private ToggleRef _showPanelsToggleRef;
 
         // Properties
         public ElementPanel SelectedElementPanel
@@ -52,7 +53,7 @@ namespace UIBuddy.UI.Panel
             // Add background image
             var bgImage = RootObject.AddComponent<Image>();
             bgImage.type = Image.Type.Sliced;
-            bgImage.color = Theme.PanelBackground;
+            bgImage.color = Theme.PanelBackground.GetWithOpacity(.9f);
 
             // Create title bar (must be created first as we'll use it for the dragger)
             CreateTitleBar(RootObject);
@@ -139,10 +140,7 @@ namespace UIBuddy.UI.Panel
             toggleContainerRect.anchoredPosition = new Vector2(-10, 0);
             toggleContainerRect.sizeDelta = Vector2.zero;
             _closeAllToggleRef = UIFactory.CreateToggle(toggleContainer, $"EnableToggle_{Name}");
-            _closeAllToggleRef.OnValueChanged += value =>
-            {
-                EnableMainPanelInternal(value);
-            };
+            _closeAllToggleRef.OnValueChanged += EnableMainPanelInternal;
             _closeAllToggleRef.Toggle.isOn = ConfigManager.IsModVisible;
         }
 
@@ -154,7 +152,7 @@ namespace UIBuddy.UI.Panel
                 childControlWidth: true,
                 childControlHeight: true,
                 spacing: 10,
-                new Vector4(5, 5, 5, 5));
+                new Vector4(5, 15, 5, 5));
 
             UIFactory.SetLayoutElement(nameRow, minHeight: 30, preferredHeight: 30);
 
@@ -248,11 +246,11 @@ namespace UIBuddy.UI.Panel
 
             UIFactory.SetLayoutElement(row, minHeight: 30, preferredHeight: 30);
 
-            var toggleRef = UIFactory.CreateToggle(row, $"EnableCheck_{nameof(MainControlPanel)}");
-            toggleRef.OnValueChanged += ToggleAllEnabled;
-            toggleRef.Toggle.isOn = true; // Default value
-            toggleRef.Text.text = "Show Panels";
-            toggleRef.Text.fontSize = 16;
+            _showPanelsToggleRef = UIFactory.CreateToggle(row, $"EnableCheck_{nameof(MainControlPanel)}");
+            _showPanelsToggleRef.OnValueChanged += ToggleAllEnabled;
+            _showPanelsToggleRef.Toggle.isOn = true; // Default value
+            _showPanelsToggleRef.Text.text = "Show Panels";
+            _showPanelsToggleRef.Text.fontSize = 16;
         }
 
         private void CreateCheckFocusRow(GameObject parent)
@@ -301,13 +299,16 @@ namespace UIBuddy.UI.Panel
 
         public void ToggleMainPanel()
         {
-            _closeAllToggleRef.Toggle.isOn = !_closeAllToggleRef.Toggle.isOn;
+            var value = !_closeAllToggleRef.Toggle.isOn;
+            _closeAllToggleRef.SetToggleValueWithoutEvent(value);
+            EnableMainPanelInternal(value);
         }
 
         private void EnableMainPanelInternal(bool value)
         {
             if(RootObject == null) return;
-            PanelManager.SetPanelsActive(value);
+            _showPanelsToggleRef?.SetToggleValueWithoutEvent(value);
+            ToggleAllEnabled(value);
             PanelManager.ElementListPanel.SetActive(value);
             base.SetActive(value);
             ConfigManager.IsModVisible = value;
@@ -472,6 +473,14 @@ namespace UIBuddy.UI.Panel
         public override void SetActive(bool value)
         {
             _selectPanelsToggleRef.Toggle.isOn = value;
+        }
+
+        public void DeselectCurrentPanel()
+        {
+            if (SelectedElementPanel == null) return;
+
+            SelectedElementPanel.ShowPanelOutline(false);
+            SelectedElementPanel = null;
         }
     }
 }

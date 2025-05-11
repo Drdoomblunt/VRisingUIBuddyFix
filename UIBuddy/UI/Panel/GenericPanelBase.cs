@@ -1,4 +1,6 @@
 ﻿using System;
+using ProjectM.UI;
+using UIBuddy.Managers;
 using UIBuddy.UI.Classes;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,7 +18,7 @@ public abstract class GenericPanelBase: IGenericPanel
     public RectTransform RootRect { get; }
     protected Canvas OwnerCanvas { get; private set; }
     public UIElementDragEx Dragger { get; protected set; }
-    private bool ApplyingSaveData { get; set; } = true;
+    protected bool ApplyingSaveData { get; set; } = true;
     public bool IsPinned => false;
 
     /// <summary>
@@ -30,8 +32,17 @@ public abstract class GenericPanelBase: IGenericPanel
         RootObject = gameObjectName.Contains('|') ? FindInHierarchy(gameObjectName) : GameObject.Find(gameObjectName);
         if (RootObject == null)
             return;
+
+        if (PanelManager.ButtonBarFixList.Contains(friendlyName))
+        {
+            //var fitter = RootObject.GetComponent<ContentSizeFitter>();
+            var parent = RootObject.GetComponent<ActionBarParent>();
+            //Object.Destroy(fitter);
+            Object.Destroy(parent);
+        }
+
         RootRect = RootObject.GetComponent<RectTransform>();
-        if (RootRect.sizeDelta.x < 50f || RootRect.sizeDelta.y < 50f)
+        if (RootRect.rect.width < 50f || RootRect.rect.height < 50f)
             RootRect.sizeDelta = new Vector2(50f, 50f);
 
         OwnerCanvas = RootObject.GetComponentInParent<Canvas>();
@@ -242,6 +253,7 @@ public abstract class GenericPanelBase: IGenericPanel
     public virtual void Dispose()
     {
         Object.Destroy(RootObject);
+        Dragger?.Dispose();
     }
 
     protected virtual void OnFinishedDrag()
@@ -258,20 +270,20 @@ public abstract class GenericPanelBase: IGenericPanel
 
     private string PanelConfigKey => $"{Name}".Replace("'", "").Replace("\"", "").Replace(" ","_");
 
-    protected void Save()
+    protected virtual void Save()
     {
         if (ApplyingSaveData) return;
 
-        SetSaveDataToConfigValue();
+        SetSaveDataToConfigValue(RootRect);
     }
 
-    protected bool LoadConfigValues()
+    protected virtual bool LoadConfigValues()
     {
         ApplyingSaveData = true;
         // apply panel save data or revert to default
         try
         {
-            return ApplyLoadedData();
+            return ApplyLoadedData(RootRect);
         }
         catch (Exception ex)
         {
@@ -286,23 +298,23 @@ public abstract class GenericPanelBase: IGenericPanel
 
     }
 
-    private void SetSaveDataToConfigValue()
+    protected void SetSaveDataToConfigValue(RectTransform rectTransform)
     {
-        Plugin.Instance.Config.Bind("Panels", PanelConfigKey, "", "Serialized panel data").Value = ToSaveData();
+        Plugin.Instance.Config.Bind("Panels", PanelConfigKey, "", "Serialized panel data").Value = ToSaveData(rectTransform);
     }
 
-    private string ToSaveData()
+    private string ToSaveData(RectTransform rectTransform)
     {
         try
         {
             return string.Join("|", new string[]
             {
                 IsRootActive.ToString(),
-                RootRect.RectAnchorsToString(),
-                RootRect.RectPositionToString(),
-                RootRect.RectRotationToString(),
+                rectTransform.RectSizeToString(),
+                rectTransform.RectPositionToString(),
+                rectTransform.RectRotationToString(),
                 IsPinned.ToString(),
-                RootRect.RectScaleToString(),
+                rectTransform.RectScaleToString(),
             });
         }
         catch (Exception ex)
@@ -312,13 +324,13 @@ public abstract class GenericPanelBase: IGenericPanel
         }
     }
 
-    private bool ApplyLoadedData()
+    protected bool ApplyLoadedData(RectTransform rectTransform)
     {
         var data = Plugin.Instance.Config.Bind("Panels", PanelConfigKey, "", "Serialized panel data").Value;
-        return ApplyLoadedData(data);
+        return ApplyLoadedData(data, rectTransform);
     }
 
-    private bool ApplyLoadedData(string data)
+    private bool ApplyLoadedData(string data, RectTransform rectTransform)
     {
         if (string.IsNullOrEmpty(data))
             return false;
@@ -328,11 +340,11 @@ public abstract class GenericPanelBase: IGenericPanel
         {
             if(bool.TryParse(split[0], out var isActive))
                 RootObject.SetActive(isActive);
-            RootRect.SetAnchorsFromString(split[1]);
-            RootRect.SetPositionFromString(split[2]);
-            RootRect.SetRotationFromString(split[3]);
+            //rectTransform.SetAnchorsFromString(split[1]);
+            rectTransform.SetPositionFromString(split[2]);
+            rectTransform.SetRotationFromString(split[3]);
             // IsPinned 4
-            RootRect.SetScaleFromString(split[5]);
+            rectTransform.SetScaleFromString(split[5]);
 
             if (IsDetached)
             {
@@ -346,7 +358,7 @@ public abstract class GenericPanelBase: IGenericPanel
             Plugin.Log.LogWarning("Invalid or corrupt panel save data! Restoring to default.");
             //SetDefaultSizeAndPosition();
             EnsureValidPosition();
-            SetSaveDataToConfigValue();
+            SetSaveDataToConfigValue(rectTransform);
             return false;
         }
 

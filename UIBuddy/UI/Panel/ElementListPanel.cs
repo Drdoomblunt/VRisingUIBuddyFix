@@ -127,8 +127,7 @@ namespace UIBuddy.UI.Panel
         {
             var data = new ElementPanelData { Panel = panel };
             _dataList.Add(data);
-            _scrollDataHandler.RefreshData();
-            _scrollPool.Refresh(true);
+            RefreshList();
         }
 
         public void RemoveElement(IGenericPanel panel)
@@ -137,8 +136,7 @@ namespace UIBuddy.UI.Panel
             if (data != null)
             {
                 _dataList.Remove(data);
-                _scrollDataHandler.RefreshData();
-                _scrollPool.Refresh(true);
+                RefreshList();
             }
         }
 
@@ -159,15 +157,22 @@ namespace UIBuddy.UI.Panel
                 cell.Disable();
                 return;
             }
+
             var data = _dataList[index];
             cell.Button.ButtonText.text = data.Panel.Name;
+            cell.OnToggleValueChanged = null; //cells are cached so have to clear
             cell.SetInitialToggleValue(data.Panel.IsRootActive);
-            cell.OnToggleValueChanged += value =>
+            cell.OnToggleValueChanged = value =>
             {
+                if (!cell.Enabled) return;
+
                 data.Panel.SetRootActive(value);
-                if(value)
+                if (value)
                     PanelManager.SelectPanel(data.Panel);
-                else data.Panel.ShowPanelOutline(false);
+                else
+                {
+                    PanelManager.MainPanel.DeselectCurrentPanel();
+                }
 
                 UpdateSelectedEntry(value ? data.Panel : null);
             };
@@ -184,10 +189,18 @@ namespace UIBuddy.UI.Panel
             });
         }
 
-        public void UpdateElement(ElementPanel panel)
+        public void RefreshList()
         {
             _scrollDataHandler.RefreshData();
             _scrollPool.Refresh(true);
+        }
+
+        public void ClearList()
+        {
+            UpdateSelectedEntry(null);
+            PanelManager.MainPanel.DeselectCurrentPanel();
+            _dataList.Clear();
+            RefreshList();
         }
     }
 }

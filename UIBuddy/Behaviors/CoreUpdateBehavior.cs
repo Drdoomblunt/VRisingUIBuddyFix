@@ -36,6 +36,6 @@ public class CoreUpdateBehavior : MonoBehaviour
         UIBehaviourModel.UpdateInstances();
 
         InputManager.Update();
-        PanelManager.Instance?.Update();
+        PanelManager.Update();
     }
 }

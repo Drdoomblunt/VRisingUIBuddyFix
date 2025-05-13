@@ -54,6 +54,8 @@ public class PanelManager: IDisposable
         "Ability Bar"
     ];
 
+    public static string RecipeTrackerFix = "Recipe Tracker";
+
     private static bool ShouldUpdateFocus =>
         MouseInTargetDisplay &&
         InputManager.Mouse.Button0 == MouseState.ButtonState.Down &&
@@ -94,6 +96,7 @@ public class PanelManager: IDisposable
                     AddDrag("MainMenu_V2(Clone)|Content|SideBar", "Main Menu", "Menu");
                     AddDrag("MainMenu_V2(Clone)|Content|SideBar|LinksParentNode", "(!!)Links", "Links",
                         prms: inheritAnchorParam);
+                    AddDrag("CanvasUnscaledMainMenu|VersionParent|VersionString|background", "Version String", "V");
                 }
                     break;
                 case ScreenType.CharacterHUD:
@@ -145,14 +148,24 @@ public class PanelManager: IDisposable
                         InitialPosition = new Vector2(0, 0),
                     };
                     AddDetachedDrag("HUDChatParent|ChatWindow(Clone)|Content", "(!!)Chat Window", "CHAT", prms); //chat
-
-                    //AddDrag("Version_HUD", "Clan Members");
-                    //AddDrag("HUDClan", "Clan Members", "CLAN"); //clan
-                    // _pm.AddDrag("HUDTutorial"); //tutorial
-                    // _pm.AddDrag("HUDRecipeTrackerParent"); //recipe tracker
-                }
+                    
+                    AddDrag("PlayerList_Overlay(Clone)|Version_HUD", "(!!)Clan Members", "CM", prms: inheritAnchorParam);
+                    //AddDrag("HUDCanvas(Clone)|Canvas|HUDRecipeTrackerParent", "Recipe Tracker", "Recipe");
+                    AddDrag("CanvasUnscaledMainMenu|VersionParent|VersionString|background", "Version String", "V");
+                    AddDrag("ActionWheelReminder|Icon", "Wheel Reminder Icon", "WRI");
+                    AddDrag("ActionWheelReminder|KeybindBackground", "Wheel Reminder Key", "WRK");
+                    ////AddDrag("InventoryMenu(Clone)", "Inventory Window", "Inventory");
+                    //AddDrag("WorkstationMenu(Clone)|MenuParent|CharacterInventorySubMenu(Clone)", "Craft - Inventory", "CraftInv");
+                    //AddDrag("WorkstationMenu(Clone)|MenuParent|CharacterInventorySubMenu(Clone)", "Craft - Recipes", "CraftRec");
+                    }
                     break;
                 case ScreenType.EscapeMenu:
+
+                    //AddDrag("FullscreenMenu(Clone)|Root|OuterLayout|InnerLayout|ViewParent|ViewParent (1)|EscapeMenu(Clone)|Menu|GameObject", "Bug Buttons", "BUG", prms: inheritAnchorParam);
+                    //AddDrag("FullscreenMenu(Clone)|Root|OuterLayout|InnerLayout|ViewParent|ViewParent (1)|EscapeMenu(Clone)|Menu|ServerInfoLayout", "Server Info", "Server", prms: inheritAnchorParam);
+                    AddDrag("FullscreenMenu(Clone)|Root|OuterLayout|InnerLayout|ViewParent|ViewParent (1)|EscapeMenu(Clone)|Menu|Logo", "Logo", "Logo");
+                    //AddDrag("FullscreenMenu(Clone)|Root|OuterLayout|InnerLayout|ViewParent|ViewParent (1)|EscapeMenu(Clone)|Menu|ButtonCollection", "Buttons", "Buttons", prms: inheritAnchorParam);
+                    
                     break;
                 case ScreenType.None:
                     // No specific screen type, do nothing
@@ -473,6 +486,8 @@ public class PanelManager: IDisposable
             if(value)
                 panel.ShowPanelOutline(false);
         }
+
+        MainPanel.SelectedElementPanel = null;
     }
 
     private static List<IGenericPanel> GetAllPanels()

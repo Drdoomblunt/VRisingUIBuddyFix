@@ -1,5 +1,5 @@
 # UI Buddy mod for V Rising
-<img src="https://github.com/panthernet/VRisingUIBuddy/blob/main/logo.png" width="240" height="240"/>
+![image](https://github.com/panthernet/VRisingUIBuddy/blob/main/logo.png?raw=true)
 
 ## Table of Contents
 
@@ -20,6 +20,9 @@ Buddy UI allow advanced UI elements customization for V Rising. Currently it wor
  - Select different UI elements and adjust their visibility, position, scale and rotation
  - Supports: Main Game Menu, Character HUD in game
  - UI layout is saved and loaded automatically so your custom layout persist through game launches
+
+
+
 
 ### Current Version Warnings
 

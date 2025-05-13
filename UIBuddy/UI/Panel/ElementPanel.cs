@@ -110,6 +110,11 @@ public class ElementPanel: GenericPanelBase
             CustomUIRect.sizeDelta = new Vector2(50f, 50f);
         }
 
+        if (PanelManager.RecipeTrackerFix.Equals(Name))
+        {
+            CustomUIRect.sizeDelta = new Vector2(50f, 50f);
+        }
+
         ConstructDrag(CustomPanelParentObject ?? CustomUIObject ?? RootObject);
 
 
@@ -173,7 +178,7 @@ public class ElementPanel: GenericPanelBase
                         }
                     }
                 }
-                
+
                 // Activate the UI
                 if (ConfigManager.IsModVisible)
                     CustomUIObject.SetActive(true);
@@ -263,11 +268,20 @@ public class ElementPanel: GenericPanelBase
         CustomUIObject.SetActive(value);
         if(!value && PanelManager.MainPanel.SelectedElementPanel == this)
             PanelManager.MainPanel.DeselectCurrentPanel();
+        
+        if (PanelManager.RecipeTrackerFix.Equals(Name))
+        {
+            CustomUIRect.sizeDelta = new Vector2(50f, 50f);
+        }
     }
 
     public override void SetRootActive(bool value)
     {
         RootObject.SetActive(value);
+        if (PanelManager.RecipeTrackerFix.Equals(Name))
+        {
+            CustomUIRect.sizeDelta = new Vector2(50f, 50f);
+        }
         Save();
     }
 

@@ -21,6 +21,8 @@ Buddy UI allow advanced UI elements customization for V Rising. Currently it wor
  - Supports: Main Game Menu, Character HUD in game
  - UI layout is saved and loaded automatically so your custom layout persist through game launches
 
+![image](https://github.com/user-attachments/assets/6157983d-0006-4d4f-a982-8fe1e38faa60)
+![image](https://github.com/user-attachments/assets/a9d93c21-c84b-4f20-a090-a489eafeb735)
 
 
 

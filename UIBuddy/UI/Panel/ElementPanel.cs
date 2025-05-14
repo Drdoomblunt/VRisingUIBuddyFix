@@ -107,7 +107,7 @@ public class ElementPanel: GenericPanelBase
 
         if (PanelManager.ButtonBarFixList.Contains(Name))
         {
-            CustomUIRect.sizeDelta = new Vector2(50f, 50f);
+           // CustomUIRect.sizeDelta = new Vector2(50f, 50f);
         }
 
         if (PanelManager.RecipeTrackerFix.Equals(Name))

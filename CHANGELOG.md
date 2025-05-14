@@ -1,3 +1,6 @@
+### v0.3.0
+ - Fixed Action bar
+	
 ### v0.2.0
  - Added Clan Members element support
  - Added Action Wheel Reminder element support

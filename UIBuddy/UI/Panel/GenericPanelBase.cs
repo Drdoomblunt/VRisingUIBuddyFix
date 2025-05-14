@@ -36,9 +36,9 @@ public abstract class GenericPanelBase: IGenericPanel
         if (PanelManager.ButtonBarFixList.Contains(friendlyName))
         {
             //var fitter = RootObject.GetComponent<ContentSizeFitter>();
-            var parent = RootObject.GetComponent<ActionBarParent>();
+            //var parent = RootObject.GetComponent<ActionBarParent>();
             //Object.Destroy(fitter);
-            Object.Destroy(parent);
+            //Object.Destroy(parent);
         }
 
         RootRect = RootObject.GetComponent<RectTransform>();

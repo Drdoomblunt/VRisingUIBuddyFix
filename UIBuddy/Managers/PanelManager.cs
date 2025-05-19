@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Il2CppSystem.Xml.Serialization;
+using ProjectM.EOS;
 using UIBuddy.Classes;
 using UIBuddy.UI;
 using UIBuddy.UI.Classes;
@@ -232,7 +233,9 @@ public class PanelManager: IDisposable
         Canvas.overrideSorting = true;
 
         Scaler = CanvasRoot.AddComponent<CanvasScaler>();
-        Scaler.referenceResolution = new Vector2(3840, 2160);
+        var scaler = GameObject.Find("MainMenuCanvas(Clone)").GetComponentInChildren<CanvasScaler>();
+        Plugin.Log.LogInfo($"Scaler ref: {scaler.referenceResolution.x}x{scaler.referenceResolution.y}");
+        Scaler.referenceResolution = scaler.referenceResolution;
         Scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         Scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
 

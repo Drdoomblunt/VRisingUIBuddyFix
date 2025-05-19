@@ -36,7 +36,7 @@ namespace UIBuddy.UI
         }
 
         public static LabelRef CreateLabel(GameObject parent, string name, string defaultText, TextAlignmentOptions alignment = TextAlignmentOptions.Center,
-            Color? color = null, int fontSize = 14)
+            Color? color = null, int fontSize = 14, float outlineWidth = 0.15f, Color? outlineColor = null)
         {
             var obj = CreateUIObject(name, parent);
             var textComp = obj.AddComponent<TextMeshProUGUI>();
@@ -52,8 +52,8 @@ namespace UIBuddy.UI
 
             try
             {
-                textComp.outlineWidth = 0.15f;
-                textComp.outlineColor = Color.black;
+                textComp.outlineWidth = outlineWidth;
+                textComp.outlineColor = outlineColor ?? Color.black;
             }
             catch (Exception)
             {

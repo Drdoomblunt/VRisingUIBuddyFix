@@ -1,3 +1,6 @@
+### V0.4.0
+ - Latest BepInEx support
+ - Fixed screen resolution handling
 ### v0.3.0
  - Fixed Action bar
 	

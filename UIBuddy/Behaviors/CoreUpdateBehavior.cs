@@ -27,15 +27,19 @@ public class CoreUpdateBehavior : MonoBehaviour
     }
 
     protected void Update()
-    {
-        CoroutineUtility.TickRoutines();
+{
+    CoroutineUtility.TickRoutines();
 
-        if(!Plugin.IsInitialized) return;
+    if(!Plugin.IsInitialized) return;
 
-        InputFieldRef.UpdateInstances();
-        UIBehaviourModel.UpdateInstances();
+    // Process input events
+    UIBuddy.KeyBinds.KeybindRegistrator.Update();
 
-        InputManager.Update();
-        PanelManager.Update();
-    }
+    InputFieldRef.UpdateInstances();
+    UIBehaviourModel.UpdateInstances();
+
+    InputManager.Update();
+    PanelManager.Update();
+}
+
 }
